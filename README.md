@@ -32,6 +32,12 @@ rake lint            # rubocop, including the custom cops in cops/
 `rake drive` writes screenshots to `tmp/shots/`. They are the point — read
 them.
 
+## Licence
+
+GPL-3.0-or-later, the same as upstream Curtail — see `COPYING`. Copyright for
+the original work remains with Hugo Posnic; the translations in `po/` are the
+work of upstream's translators and are carried over unchanged.
+
 ## Layout
 
 | Path | What |

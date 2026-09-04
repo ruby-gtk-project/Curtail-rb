@@ -137,6 +137,7 @@
 
             mkdir -p $out/share/curtail-rb $out/share/applications
             cp -r lib data po $out/share/curtail-rb/
+            install -Dm644 COPYING -t $out/share/licenses/curtail-rb
             # bin/ has to sit next to lib/ for the launcher's require_relative.
             install -Dm755 bin/curtail-rb $out/share/curtail-rb/bin/curtail-rb
 
@@ -163,6 +164,8 @@
             sed -i 's/^ *//' $out/share/dbus-1/services/com.github.huluti.Curtail.Rb.service
             install -Dm644 data/icons/hicolor/scalable/apps/com.github.huluti.Curtail.Rb.svg \
               -t $out/share/icons/hicolor/scalable/apps
+            install -Dm644 data/icons/hicolor/symbolic/apps/com.github.huluti.Curtail.Rb-symbolic.svg \
+              -t $out/share/icons/hicolor/symbolic/apps
 
             # Gio::Settings.new aborts the process if it cannot find the
             # schema, so it has to be compiled and reachable. Installing it
