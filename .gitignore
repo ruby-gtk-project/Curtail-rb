@@ -1,4 +1,4 @@
 /.direnv/
 /vendor/bundle/
 /result
-Gemfile.lock
+/tmp/

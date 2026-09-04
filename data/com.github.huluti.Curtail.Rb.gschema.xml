@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="curtail">
+	<schema id="com.github.huluti.Curtail.Rb" path="/com/github/huluti/Curtail/Rb/">
+	  <key type="b" name="new-file">
+      <default>true</default>
+      <summary>Save into a new file</summary>
+      <description>Save the compressed image into a new file.</description>
+    </key>
+	  <key type="i" name="naming-mode">
+      <default>0</default>
+      <summary>Select the mode to append text for a new file</summary>
+      <description>Set how to append the additional text (as suffix or prefix) for a new file.</description>
+    </key>
+	  <key type="b" name="recursive">
+	    <default>true</default>
+	    <summary>Enable recursive compression in folders</summary>
+	    <description>This setting enable compression in a recursive way in folders.</description>
+	  </key>
+	  <key type="b" name="metadata">
+      <default>true</default>
+      <summary>Preserve metadata</summary>
+      <description>This setting preserves metadata of images.</description>
+    </key>
+	  <key type="b" name="file-attributes">
+      <default>true</default>
+      <summary>Preserve file permissions and timestamps if possible</summary>
+      <description>This setting file permissions and timestamps of images if possible.</description>
+    </key>
+	  <key type="b" name="lossy">
+      <default>false</default>
+      <summary>Enable lossy mode</summary>
+      <description>Use lossy mode to compress images.</description>
+    </key>
+	  <key type="s" name="suffix-prefix">
+      <default>'-min'</default>
+      <summary>Suffix/Prefix to append at new file</summary>
+      <description>Suffix/Prefix to append at new file.</description>
+    </key>
+	  <key type="i" name="png-lossy-level">
+      <default>90</default>
+      <summary>PNG Lossy Compression Level</summary>
+      <description>Lossy compression level to use for PNG images.</description>
+    </key>
+	  <key type="i" name="png-lossless-level">
+      <default>2</default>
+      <summary>PNG Lossless Compression Level</summary>
+      <description>Lossless compression level to use for PNG images.</description>
+	  </key>
+	  <key type="i" name="jpg-lossy-level">
+      <default>90</default>
+      <summary>JPG Lossy Compression Level</summary>
+      <description>Lossy compression level to use for JPG images.</description>
+    </key>
+	  <key type="i" name="webp-lossy-level">
+      <default>70</default>
+      <summary>WebP Lossy Compression Level</summary>
+      <description>Lossy compression level to use for WebP images.</description>
+    </key>
+	  <key type="i" name="webp-lossless-level">
+      <default>4</default>
+      <summary>WebP Lossless Compression Level</summary>
+      <description>Lossless compression level to use for WebP images.</description>
+    </key>
+	  <key type="b" name="jpg-progressive">
+      <default>false</default>
+      <summary>Enable progressive encoding for JPEG images</summary>
+      <description>Optionally encode jpeg images progressively.</description>
+    </key>
+	  <key type="b" name="svg-maximum-level">
+      <default>false</default>
+      <summary>Enable maximum compression for SVG images</summary>
+      <description>Enable maximum cleaning of SVG images.</description>
+    </key>
+	  <key type="i" name="compression-timeout">
+      <default>30</default>
+      <summary>Compression Timeout</summary>
+      <description>Compression timeout for each image.</description>
+    </key>
+	</schema>
+</schemalist>

@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/curtail_rb'
+
+# `.tap(&:build)` rather than `.build.run`: build returns the Gtk::Application
+# so the test driver can attach to it, and Gtk::Application#run would drop the
+# file arguments that HANDLES_OPEN needs.
+CurtailRb::Application.new.tap(&:build).run

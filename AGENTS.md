@@ -1,8 +1,11 @@
 # Curtail — Ruby port
 
-This branch is an empty `ruby` orphan branch. The upstream code (the original
-implementation of Curtail) lives on the fork's other branches; this branch is
-where the Ruby GTK4 / Libadwaita port is written.
+This branch holds the Ruby GTK4 / Libadwaita port of Curtail. The upstream
+Python implementation — the spec this port is measured against — is on the
+`main` branch of this same repo; read it with `git show origin/main:<path>`.
+
+See `README.md` for the layout and for the deliberate differences from
+upstream.
 
 ## Skills — use them
 
@@ -20,8 +23,21 @@ Two skills are installed in `.claude/skills/`. They are not optional reading.
 
 ## Setup
 
-`direnv allow` (or `nix develop`) gets Ruby, GTK4, Libadwaita and the
-introspection typelibs. Then `bundle install`.
+`nix develop` gets Ruby, GTK4, Libadwaita, the introspection typelibs and the
+five compressors the app shells out to (`oxipng`, `pngquant`, `jpegoptim`,
+`cwebp`, `scour`). Gems come from `gemset.nix`; after changing the `Gemfile`,
+regenerate it with `bundix -l` and `git add` the result — the flake reads it
+through `bundlerEnv`, so an untracked `gemset.nix` is invisible to Nix.
+
+`rake schema` compiles the GSettings schema into `tmp/share`, which the
+devshell puts on `XDG_DATA_DIRS`. Without it `Gio::Settings.new` aborts the
+process rather than raising.
+
+## Running and testing
+
+    ./bin/curtail-rb          # or with image paths as arguments
+    rake                      # units, UI drives, rubocop
+    rake drive                # headless UI runs; screenshots land in tmp/shots
 
 ## Style
 

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Curtail (Ruby)
+Exec=curtail-rb %U
+Comment=Compress your images
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Graphics;
+# Icon name, do not translate
+Icon=com.github.huluti.Curtail.Rb
+StartupWMClass=curtail-rb
+MimeType=image/jpeg;image/png;image/webp;image/svg+xml;
+StartupNotify=true
+# Keywords, do not translate
+Keywords=compress;optimize;image;photo;
