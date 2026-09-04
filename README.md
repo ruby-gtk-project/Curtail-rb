@@ -59,6 +59,10 @@ them.
 - **Two upstream bugs are not reproduced.** A drop carrying no files, and a
   directory containing no images, leave upstream stuck on the "Analyzing
   Images" view; this port returns to whichever view it came from.
+- **Error details show the tool's own output.** Upstream's info popover
+  displays Python's `CalledProcessError` string ("Command '…' returned
+  non-zero exit status 1"); this port shows what the compressor actually
+  printed, which is what you need to know.
 - **Compression timeouts kill the child.** Upstream's `subprocess` timeout
   does too; the naive Ruby translation (`Timeout.timeout`) would not, so the
   deadline is enforced by joining the wait thread and killing the process.

@@ -19,7 +19,9 @@ module CurtailRb
       'clear-results'      => nil,
       'banner-change-mode' => nil,
       'preferences'        => '<Primary>comma',
-      'shortcuts'          => nil,
+      # GTK binds Ctrl+? to its own app.shortcuts action; upstream inherits
+      # that from Adw.Application, which this port cannot use.
+      'shortcuts'          => '<Primary>question',
       'about'              => nil,
       'quit'               => '<Primary>q',
       'convert-dir'        => '<Primary>d',
@@ -649,9 +651,7 @@ module CurtailRb
         dialog.add(shortcuts_section)
 
         shortcuts_section.tap do |section|
-          SHORTCUTS.each do |title, action_name|
-            section.add(Adwaita::ShortcutsItem.new(title, action_name))
-          end
+          shortcuts_items.each_value { |item| section.add(item) }
         end
       end
     end

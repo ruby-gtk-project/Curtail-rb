@@ -163,7 +163,9 @@ GtkDriver.drive(CurtailRb::Application.new, shots: 'tmp/shots', interval: 700) d
     end
   end
 
-  d.step('and it renders') { d.shot('11-context-menu') }
+  # The popover renders into its own surface, so shooting the window would
+  # miss it — the popover widget itself is the target.
+  d.step('and it renders') { d.shot('11-context-menu', win.call.context_popover) }
 
   d.step('a drop compresses what it is handed') do
     win.call.clear_results

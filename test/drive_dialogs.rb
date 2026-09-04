@@ -107,18 +107,34 @@ GtkDriver.drive(CurtailRb::Application.new, shots: 'tmp/shots') do |d, app|
 
   d.step('shortcuts is showing') do
     d.check('a dialog is showing') { !win.call.window.visible_dialog.nil? }
+    # Assert against the items the SECTION holds, not a parallel set only the
+    # test can see — the first version of this check passed while the visible
+    # dialog was built from different, wrongly-constructed items.
+    win.call.shortcuts_dialog
+    section = win.call.shortcuts_section
+    shown = (0...section.n_items).to_h do |i|
+      section.get_item(i).then { |item| [item.action_name, item.accelerator] }
+    end
+
+    d.check('the section holds all four items') { shown.length == 4 }
     d.check('Select File shows its accelerator') do
-      win.call.shortcuts_items['win.select-file'].accelerator == '<Control>o'
+      shown['win.select-file'] == '<Control>o'
+    end
+    d.check('Preferences shows its accelerator') do
+      shown['win.preferences'] == '<Control>comma'
     end
     d.check('Quit shows its accelerator') do
-      win.call.shortcuts_items['win.quit'].accelerator == '<Control>q'
+      shown['win.quit'] == '<Control>q'
     end
-    d.check('Keyboard Shortcuts has none, like upstream') do
-      win.call.shortcuts_items['win.shortcuts'].accelerator == ''
+    d.check('Keyboard Shortcuts shows its own') do
+      shown['win.shortcuts'] == '<Control>question'
     end
-    d.check('every item keeps its action name') do
-      win.call.shortcuts_items.all? { |name, item| item.action_name == name }
+    # The bug this replaces: the action name went in as the accelerator, so
+    # every badge rendered blank.
+    d.check('no action name leaked into an accelerator field') do
+      shown.values.none? { |accel| accel.to_s.start_with?('win.') }
     end
+
     d.shot('07-shortcuts')
     win.call.window.visible_dialog&.close
   end

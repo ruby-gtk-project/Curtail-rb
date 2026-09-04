@@ -10,5 +10,6 @@ Icon=com.github.huluti.Curtail.Rb
 StartupWMClass=curtail-rb
 MimeType=image/jpeg;image/png;image/webp;image/svg+xml;
 StartupNotify=true
+DBusActivatable=true
 # Keywords, do not translate
 Keywords=compress;optimize;image;photo;

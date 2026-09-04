@@ -139,6 +139,17 @@
             install -Dm755 bin/curtail-rb $out/share/curtail-rb/bin/curtail-rb
 
             cp data/com.github.huluti.Curtail.Rb.desktop $out/share/applications/
+
+            # The desktop entry is DBusActivatable, so a file manager opening
+            # an image hands it to the running instance over the bus instead
+            # of spawning a second one — which needs this service file.
+            mkdir -p $out/share/dbus-1/services
+            cat > $out/share/dbus-1/services/com.github.huluti.Curtail.Rb.service <<SERVICE
+            [D-BUS Service]
+            Name=com.github.huluti.Curtail.Rb
+            Exec=$out/bin/curtail-rb --gapplication-service
+            SERVICE
+            sed -i 's/^ *//' $out/share/dbus-1/services/com.github.huluti.Curtail.Rb.service
             install -Dm644 data/icons/hicolor/scalable/apps/com.github.huluti.Curtail.Rb.svg \
               -t $out/share/icons/hicolor/scalable/apps
 
