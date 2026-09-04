@@ -2,21 +2,27 @@
 
 require 'open3'
 
+require_relative 'i18n'
+
 module CurtailRb
   # Upstream's tools.py: formatting, file-filter construction, thumbnails,
   # directory walking and the About dialog's debug block.
   module Tools
+    extend I18n
+
     module_function
 
     def sizeof_fmt(num) = GLib.format_size(num)
 
     # The five filters the Browse Files dialog offers, in upstream's order.
+    # The names are translated where they are used, not here, so switching
+    # locale does not need the constant rebuilt.
     FILTERS = [
-      ['All images', %w[image/jpeg image/png image/webp image/svg+xml]],
-      ['PNG images', %w[image/png]],
-      ['JPEG images', %w[image/jpeg]],
-      ['WebP images', %w[image/webp]],
-      ['SVG images', %w[image/svg+xml]],
+      [N_('All images'), %w[image/jpeg image/png image/webp image/svg+xml]],
+      [N_('PNG images'), %w[image/png]],
+      [N_('JPEG images'), %w[image/jpeg]],
+      [N_('WebP images'), %w[image/webp]],
+      [N_('SVG images'), %w[image/svg+xml]],
     ].freeze
 
     def add_filechooser_filters(dialog)
@@ -24,7 +30,7 @@ module CurtailRb
         FILTERS.each do |name, mime_types|
           store.append(
             Gtk::FileFilter.new.tap do |filter|
-                        filter.name = name
+                        filter.name = _(name)
                         mime_types.each { |mime_type| filter.add_mime_type(mime_type) }
                       end,
           )
@@ -107,7 +113,7 @@ module CurtailRb
       file.query_file_type(:none) == Gio::FileType::DIRECTORY
     end
 
-    NOT_FOUND = 'Version not found'
+    def not_found = _('Version not found')
 
     # The external binaries Curtail drives, in the order the About dialog
     # lists them: label => the command that prints its version.
@@ -137,16 +143,16 @@ module CurtailRb
       Open3.capture2e(*command).then do |output, status|
         case status.success?
         when true then extract_version(output)
-        else NOT_FOUND
+        else not_found
         end
       end
     rescue StandardError
-      NOT_FOUND
+      not_found
     end
 
     # Three dot-separated groups of digits, the way upstream's regex reads it.
     def extract_version(text)
-      text[/\d+\.\d+\.\d+/] || NOT_FOUND
+      text[/\d+\.\d+\.\d+/] || not_found
     end
   end
 end

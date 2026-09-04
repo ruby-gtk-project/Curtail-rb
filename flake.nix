@@ -125,7 +125,9 @@
 
           # glib is here for its setup hook, which relocates the gschema into
           # share/gsettings-schemas/<name> and compiles it there.
-          nativeBuildInputs = [ pkgs.makeWrapper pkgs.glib ];
+          # gettext merges the catalogues into the desktop entry and the
+          # metainfo the way upstream's meson i18n.merge_file does.
+          nativeBuildInputs = [ pkgs.makeWrapper pkgs.glib pkgs.gettext ];
           buildInputs = [ gems ] ++ gtkStack;
 
           dontBuild = true;
@@ -134,11 +136,20 @@
             runHook preInstall
 
             mkdir -p $out/share/curtail-rb $out/share/applications
-            cp -r lib data $out/share/curtail-rb/
+            cp -r lib data po $out/share/curtail-rb/
             # bin/ has to sit next to lib/ for the launcher's require_relative.
             install -Dm755 bin/curtail-rb $out/share/curtail-rb/bin/curtail-rb
 
-            cp data/com.github.huluti.Curtail.Rb.desktop $out/share/applications/
+            # Name, Comment and Keywords come out translated into all 40
+            # languages, so the app is findable in a localised shell.
+            msgfmt --desktop \
+              --template=data/com.github.huluti.Curtail.Rb.desktop -d po \
+              -o $out/share/applications/com.github.huluti.Curtail.Rb.desktop
+
+            install -d $out/share/metainfo
+            msgfmt --xml \
+              --template=data/com.github.huluti.Curtail.Rb.metainfo.xml -d po \
+              -o $out/share/metainfo/com.github.huluti.Curtail.Rb.metainfo.xml
 
             # The desktop entry is DBusActivatable, so a file manager opening
             # an image hands it to the running instance over the bus instead
@@ -200,6 +211,7 @@
             pkgs.bundix
             pkgs.pkg-config
             pkgs.glib.dev
+            pkgs.gettext
             pkgs.adwaita-icon-theme
             pkgs.gsettings-desktop-schemas
           ] ++ gtkStack ++ compressionTools;

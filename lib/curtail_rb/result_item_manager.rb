@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'i18n'
 require_relative 'result_item'
 require_relative 'tools'
 
@@ -8,6 +9,8 @@ module CurtailRb
   # rejects what Curtail cannot compress, and works out the destination and
   # temp paths the compressors will write to.
   class ResultItemManager
+    include I18n
+
     ALLOWED_MIME_TYPES = %w[
       image/jpeg
       image/png
@@ -31,7 +34,7 @@ module CurtailRb
         item.file = file
 
         case file.query_exists
-        when false then item.set_error("This file doesn't exist.")
+        when false then item.set_error(_("This file doesn't exist."))
         else populate(item, file)
         end
       end
@@ -50,7 +53,7 @@ module CurtailRb
         item.mime_type = info.content_type
 
         case supported?(item)
-        when false then item.set_error('Format of this file is not supported.')
+        when false then item.set_error(_('Format of this file is not supported.'))
         else set_paths(item)
         end
       end

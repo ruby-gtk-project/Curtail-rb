@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'compression_manager'
+require_relative 'i18n'
 require_relative 'paths'
 require_relative 'preferences_dialog'
 require_relative 'result_item_manager'
@@ -12,6 +13,8 @@ module CurtailRb
   # mutually exclusive views (home, loading, results) stacked in a box the way
   # upstream's window.blp has them.
   class Window
+    include I18n
+
     APP_ID = 'com.github.huluti.Curtail.Rb'
 
     ACTIONS = {
@@ -131,7 +134,7 @@ module CurtailRb
     def compress_files(files)
       handle_files(files).then do |resolved|
         case resolved.empty?
-        when true then toast_overlay.add_toast(Adwaita::Toast.new('No files found'))
+        when true then toast_overlay.add_toast(Adwaita::Toast.new(_('No files found')))
         else start_compression(resolved)
         end
       end
@@ -156,7 +159,7 @@ module CurtailRb
 
     def saving_subtitle(new_file)
       case new_file
-      when false then 'Overwrite mode'
+      when false then _('Overwrite mode')
       else affix_subtitle
       end
     end
@@ -164,9 +167,25 @@ module CurtailRb
     def affix_subtitle
       @settings.suffix_prefix.then do |affix|
         case @settings.naming_mode.zero?
-        when true then "Safe mode with “#{affix}” suffix"
-        else "Safe mode with “#{affix}” prefix"
+        when true then affixed(affix, 'suffix')
+        else affixed(affix, 'prefix')
         end
+      end
+    end
+
+    # Upstream interpolates the affix into an f-string and only then calls
+    # gettext, so the finished sentence never matches a msgid and this subtitle
+    # is English in every locale. Here the placeholder form is what gets looked
+    # up and the affix is substituted afterwards, which is what the translators
+    # who wrote these entries meant to happen.
+    #
+    # Only the `{suffix_prefix}` spelling is accepted. Some catalogues also
+    # carry an older `'{}'` msgid, but those translations were written against
+    # a differently-worded subtitle and several embed `<b>` markup that a
+    # WindowTitle would render literally.
+    def affixed(affix, mode)
+      "Safe mode with “{suffix_prefix}” #{mode}".then do |message|
+        _(message).sub('{suffix_prefix}', affix)
       end
     end
 
@@ -232,7 +251,7 @@ module CurtailRb
 
       case
       when item.error then item.subtitle_label = item.error_message
-      when item.skipped then item.savings = 'Skipped'
+      when item.skipped then item.savings = _('Skipped')
       else record_savings(item)
       end
 
@@ -302,7 +321,7 @@ module CurtailRb
 
     def on_select
       Gtk::FileDialog.new.tap do |dialog|
-        dialog.title = 'Browse Files'
+        dialog.title = _('Browse Files')
         Tools.add_filechooser_filters(dialog)
 
         dialog.open_multiple(window) do |_, result|
@@ -321,7 +340,7 @@ module CurtailRb
 
     def on_select_folder
       Gtk::FileDialog.new.tap do |dialog|
-        dialog.title = 'Browse Directories'
+        dialog.title = _('Browse Directories')
 
         dialog.select_multiple_folders(window) do |_, result|
           select_folders_finished(dialog, result)
@@ -353,11 +372,11 @@ module CurtailRb
 
     def warning_dialog
       Adwaita::AlertDialog.new(
-        'Are you sure you want to compress images in these directories?',
+        _('Are you sure you want to compress images in these directories?'),
         warning_body,
       ).tap do |dialog|
-        dialog.add_response('cancel', 'Cancel')
-        dialog.add_response('compress', 'Compress')
+        dialog.add_response('cancel', _('Cancel'))
+        dialog.add_response('compress', _('Compress'))
         dialog.set_response_appearance('compress', warning_appearance)
       end
     end
@@ -365,12 +384,16 @@ module CurtailRb
     def warning_body
       case @settings.new_file
       when true
-        'All of the images in the directories selected and their ' \
-          'subdirectories will be compressed. The original images will ' \
-          'not be modified.'
+        _(
+          'All of the images in the directories selected and their ' \
+                    'subdirectories will be compressed. The original images will ' \
+                    'not be modified.',
+        )
       else
-        'All of the images in the directories selected and their ' \
-          'subdirectories will be compressed and overwritten!'
+        _(
+          'All of the images in the directories selected and their ' \
+                    'subdirectories will be compressed and overwritten!',
+        )
       end
     end
 
@@ -467,7 +490,7 @@ module CurtailRb
 
     def window
       @window ||= Adwaita::ApplicationWindow.new(@app).tap do |win|
-        win.title = 'Curtail'
+        win.title = _('Curtail')
         win.icon_name = APP_ID
         win.set_default_size(650, 500)
       end
@@ -478,14 +501,14 @@ module CurtailRb
     def header_bar = @header_bar ||= Adwaita::HeaderBar.new
 
     def window_title
-      @window_title ||= Adwaita::WindowTitle.new('Curtail', '')
+      @window_title ||= Adwaita::WindowTitle.new(_('Curtail'), '')
     end
 
     def filechooser_button
       @filechooser_button ||= Gtk::Button.new.tap do |button|
         button.icon_name = 'document-open-symbolic'
         button.action_name = 'win.select-file'
-        button.tooltip_text = 'Browse Files'
+        button.tooltip_text = _('Browse Files')
       end
     end
 
@@ -493,7 +516,7 @@ module CurtailRb
       @clear_button ||= Gtk::Button.new.tap do |button|
         button.icon_name = 'view-refresh-symbolic'
         button.action_name = 'win.clear-results'
-        button.tooltip_text = 'Clear Results'
+        button.tooltip_text = _('Clear Results')
       end
     end
 
@@ -501,17 +524,17 @@ module CurtailRb
       @menu_button ||= Gtk::MenuButton.new.tap do |button|
         button.icon_name = 'open-menu-symbolic'
         button.primary = true
-        button.tooltip_text = 'Main Menu'
+        button.tooltip_text = _('Main Menu')
         button.menu_model = main_menu
       end
     end
 
     def main_menu
       @main_menu ||= Gio::Menu.new.tap do |menu|
-        menu.append('Bulk Compress Directory', 'win.convert-dir')
-        menu.append('Preferences', 'win.preferences')
-        menu.append('Keyboard Shortcuts', 'win.shortcuts')
-        menu.append('About Curtail', 'win.about')
+        menu.append(_('Bulk Compress Directory'), 'win.convert-dir')
+        menu.append(_('Preferences'), 'win.preferences')
+        menu.append(_('Keyboard Shortcuts'), 'win.shortcuts')
+        menu.append(_('About Curtail'), 'win.about')
       end
     end
 
@@ -519,10 +542,10 @@ module CurtailRb
 
     def warning_banner
       @warning_banner ||= Adwaita::Banner.new(
-        'Images will be overwritten, proceed carefully',
+        _('Images will be overwritten, proceed carefully'),
       ).tap do |banner|
         banner.action_name = 'win.banner-change-mode'
-        banner.button_label = '_Change Mode'
+        banner.button_label = _('_Change Mode')
       end
     end
 
@@ -530,8 +553,8 @@ module CurtailRb
       @homebox ||= Adwaita::StatusPage.new.tap do |page|
         page.vexpand = true
         page.icon_name = APP_ID
-        page.title = 'Curtail'
-        page.description = 'Drop images here to compress them'
+        page.title = _('Curtail')
+        page.description = _('Drop images here to compress them')
         page.add_css_class('icon-dropshadow')
       end
     end
@@ -542,7 +565,7 @@ module CurtailRb
 
     def browse_button
       @browse_button ||= Gtk::Button.new.tap do |button|
-        button.label = '_Browse Files'
+        button.label = _('_Browse Files')
         button.use_underline = true
         button.halign = :center
         button.action_name = 'win.select-file'
@@ -569,14 +592,14 @@ module CurtailRb
 
     def lossless_toggle
       @lossless_toggle ||= Adwaita::Toggle.new.tap do |toggle|
-        toggle.label = 'Lossless'
+        toggle.label = _('Lossless')
         toggle.name = 'lossless'
       end
     end
 
     def lossy_toggle
       @lossy_toggle ||= Adwaita::Toggle.new.tap do |toggle|
-        toggle.label = 'Lossy'
+        toggle.label = _('Lossy')
         toggle.name = 'lossy'
       end
     end
@@ -584,8 +607,8 @@ module CurtailRb
     def loadingbox
       @loadingbox ||= Adwaita::StatusPage.new.tap do |page|
         page.vexpand = true
-        page.title = 'Analyzing Images'
-        page.description = 'Analyzing your images before compression…'
+        page.title = _('Analyzing Images')
+        page.description = _('Analyzing your images before compression…')
         page.paintable = Adwaita::SpinnerPaintable.new(page)
       end
     end
@@ -634,18 +657,13 @@ module CurtailRb
 
     def context_menu
       @context_menu ||= Gio::Menu.new.tap do |menu|
-        menu.append('Open Image', 'context-menu.open-image')
-        menu.append('Show in Folder', 'context-menu.open-folder')
+        menu.append(_('Open Image'), 'context-menu.open-image')
+        menu.append(_('Show in Folder'), 'context-menu.open-folder')
       end
     end
 
-    SHORTCUTS = [
-      ['Select File', 'win.select-file'],
-      ['Preferences', 'win.preferences'],
-      ['Keyboard Shortcuts', 'win.shortcuts'],
-      ['Quit', 'win.quit'],
-    ].freeze
-
+    # Upstream marks these with C_("shortcuts dialog", ...), so they are
+    # looked up in that context rather than as plain messages.
     def shortcuts_dialog
       @shortcuts_dialog ||= Adwaita::ShortcutsDialog.new.tap do |dialog|
         dialog.add(shortcuts_section)
@@ -670,15 +688,34 @@ module CurtailRb
     end
 
     # Keyed by action name so a test can ask what a given shortcut renders.
+    # Spelled out rather than looped over a table because rxgettext has no
+    # mark-only form of p_ — the context and the message both have to be
+    # literals at the call site to reach the template, which is also how
+    # upstream's blueprint lists them.
     def shortcuts_items
-      @shortcuts_items ||= SHORTCUTS.to_h do |title, action_name|
-        [action_name, shortcuts_item(title, action_name)]
-      end
+      @shortcuts_items ||= {
+        'win.select-file' => shortcuts_item(
+          p_('shortcuts dialog', 'Select File'),
+          'win.select-file',
+        ),
+        'win.preferences' => shortcuts_item(
+          p_('shortcuts dialog', 'Preferences'),
+          'win.preferences',
+        ),
+        'win.shortcuts'   => shortcuts_item(
+          p_('shortcuts dialog', 'Keyboard Shortcuts'),
+          'win.shortcuts',
+        ),
+        'win.quit'        => shortcuts_item(
+          p_('shortcuts dialog', 'Quit'),
+          'win.quit',
+        ),
+      }
     end
 
     def shortcuts_section
       @shortcuts_section ||= Adwaita::ShortcutsSection.new.tap do |section|
-        section.title = 'General'
+        section.title = p_('shortcuts dialog', 'General')
       end
     end
 
@@ -691,6 +728,18 @@ module CurtailRb
       'Maximiliano',
       'ARAKHNID',
     ].freeze
+
+    # gettext's convention: the catalogue's translation of the literal string
+    # "translator-credits" is that locale's translator list. An untranslated
+    # lookup returns the marker itself, which must not be shown.
+    def translator_credits
+      _('translator-credits').then do |credits|
+        case credits
+        when 'translator-credits' then ''
+        else credits
+        end
+      end
+    end
 
     def about_dialog
       @about_dialog ||= Adwaita::AboutDialog.new.tap do |about|
@@ -707,7 +756,8 @@ module CurtailRb
           'Tobias Bernard https://github.com/bertob',
         ]
         about.copyright = '© Hugo Posnic'
-        about.add_credit_section('Contributors', CONTRIBUTORS)
+        about.add_credit_section(_('Contributors'), CONTRIBUTORS)
+        about.translator_credits = translator_credits
         about.debug_info = Tools.debug_infos
       end
     end

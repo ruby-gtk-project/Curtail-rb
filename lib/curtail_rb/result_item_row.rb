@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'i18n'
 require_relative 'tools'
 
 module CurtailRb
@@ -8,11 +9,10 @@ module CurtailRb
   # from GObject property bindings; here the row owns its item and `refresh`
   # pushes the current state into the widgets.
   class ResultItemRow
+    include I18n
+
     THUMBNAIL_SIZE = 48
 
-    SKIPPED_EXPLANATION =
-      'Compression was skipped because compressing the file would have ' \
-      'resulted in a larger file size.'
 
     attr_reader :item
 
@@ -99,7 +99,7 @@ module CurtailRb
     def info_button
       Gtk::MenuButton.new.tap do |button|
         button.valign = :center
-        button.tooltip_text = 'More Information'
+        button.tooltip_text = _('More Information')
         button.icon_name = 'info-outline-symbolic'
         button.visible = false
         button.add_css_class('flat')
@@ -111,7 +111,10 @@ module CurtailRb
 
     def skipped_label
       @skipped_label ||= popover_label.tap do |label|
-        label.label = SKIPPED_EXPLANATION
+        label.label = _(
+          'Compression was skipped because compressing the file would have ' \
+          'resulted in a larger file size.',
+        )
       end
     end
 

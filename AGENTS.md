@@ -36,8 +36,14 @@ process rather than raising.
 ## Running and testing
 
     ./bin/curtail-rb          # or with image paths as arguments
-    rake                      # units, UI drives, rubocop
+    rake                      # units, UI drives, locale drives, catalogues, rubocop
     rake drive                # headless UI runs; screenshots land in tmp/shots
+    rake i18n                 # the same, in fr, es, de and zh_CN
+
+Strings are marked with `_()`, `p_(context, text)` for upstream's `C_`, and
+`N_()` where a literal lives in a constant and is looked up elsewhere. Keep the
+literals at the call site — `rake pot` extracts with rxgettext, which cannot
+see a string that reaches `_()` through a variable.
 
 ## Style
 

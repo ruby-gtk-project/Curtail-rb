@@ -250,7 +250,7 @@ class ToolsTest < Minitest::Test
   end
 
   def test_extract_version_falls_back
-    assert_equal CurtailRb::Tools::NOT_FOUND,
+    assert_equal CurtailRb::Tools.not_found,
       CurtailRb::Tools.extract_version('no version here')
   end
 
@@ -303,5 +303,147 @@ class ResultItemTest < Minitest::Test
 
   def test_starts_running
     assert CurtailRb::ResultItem.new.running
+  end
+end
+
+class I18nTest < Minitest::Test
+  def setup
+    @language = ENV.fetch('LANGUAGE', nil)
+    CurtailRb::I18n.reset!
+  end
+
+  def teardown
+    ENV['LANGUAGE'] = @language
+    CurtailRb::I18n.reset!
+  end
+
+  def in_language(lang)
+    ENV['LANGUAGE'] = lang
+    CurtailRb::I18n.reset!
+    yield
+  end
+
+  def test_every_shipped_catalogue_parses
+    CurtailRb::I18n.linguas.each do |lang|
+      in_language(lang) do
+        assert_equal lang, CurtailRb::I18n.language
+        refute_empty CurtailRb::I18n.catalogue, "#{lang} parsed to nothing"
+      end
+    end
+  end
+
+  def test_linguas_and_po_files_agree
+    CurtailRb::I18n.linguas.each do |lang|
+      assert_path_exists CurtailRb::I18n.po_path(lang)
+    end
+  end
+
+  def test_a_known_translation
+    in_language('fr') do
+      assert_equal 'Préférences', CurtailRb::I18n._('Preferences')
+    end
+  end
+
+  def test_untranslated_messages_fall_back_to_english
+    in_language('fr') do
+      assert_equal 'Not a real message', CurtailRb::I18n._('Not a real message')
+    end
+  end
+
+  # gettext keys a contextual message separately, so C_() must not fall
+  # through to the plain msgid.
+  def test_context_is_a_separate_key
+    in_language('de') do
+      assert_equal 'Allgemein', CurtailRb::I18n._('General')
+      assert_equal 'General', CurtailRb::I18n.p_('shortcuts dialog', 'General')
+    end
+  end
+
+  def test_context_translation_where_the_catalogue_has_one
+    in_language('fr') do
+      assert_equal 'Général', CurtailRb::I18n.p_('shortcuts dialog', 'General')
+    end
+  end
+
+  def test_obsolete_entries_are_ignored
+    in_language('fr') do
+      # Retired with `#~` in fr.po.
+      assert_equal 'Format of this file is not supported.',
+        CurtailRb::I18n._('Format of this file is not supported.')
+    end
+  end
+
+  def test_fuzzy_entries_are_ignored
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, 'LINGUAS'), "xx\n")
+      File.write(
+        File.join(dir, 'xx.po'),
+        %(#, fuzzy\nmsgid "Guessy"\nmsgstr "Devine"\n\n) +
+        %(msgid "Solid"\nmsgstr "Solide"\n),
+      )
+      with_po_dir(dir) do
+        in_language('xx') do
+          assert_equal 'Guessy', CurtailRb::I18n._('Guessy')
+          assert_equal 'Solide', CurtailRb::I18n._('Solid')
+        end
+      end
+    end
+  end
+
+  def test_multiline_entries_are_joined
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, 'LINGUAS'), "xx\n")
+      File.write(
+        File.join(dir, 'xx.po'),
+        %(msgid ""\n"one "\n"two"\nmsgstr ""\n"un "\n"deux"\n),
+      )
+      with_po_dir(dir) do
+        in_language('xx') { assert_equal 'un deux', CurtailRb::I18n._('one two') }
+      end
+    end
+  end
+
+  def test_an_unreadable_catalogue_degrades_to_english
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, 'LINGUAS'), "xx\n")
+      # No xx.po at all.
+      with_po_dir(dir) do
+        in_language('xx') do
+          assert_empty CurtailRb::I18n.catalogue
+          assert_equal 'Preferences', CurtailRb::I18n._('Preferences')
+        end
+      end
+    end
+  end
+
+  # The catalogues are UTF-8 whatever the runtime locale is. Under LC_ALL=C
+  # Ruby reads files as US-ASCII, and the first accented character used to
+  # raise out of the parser and take the whole app down at launch.
+  def test_catalogues_load_under_the_c_locale
+    script = <<~RUBY
+      require "curtail_rb/i18n"
+      print CurtailRb::I18n.catalogue.size
+      print ","
+      print CurtailRb::I18n._("Preferences")
+    RUBY
+
+    IO.popen(
+      { 'LC_ALL' => 'C', 'LANG' => 'C', 'LANGUAGE' => 'fr' },
+      [RbConfig.ruby, '-I', File.expand_path('../lib', __dir__), '-e', script],
+      err: [:child, :out],
+    ) { |io| io.read }.then do |output|
+      assert_match(/\A\d+,Préférences\z/, output.force_encoding('UTF-8'))
+    end
+  end
+
+  def with_po_dir(dir)
+    CurtailRb::Paths.singleton_class.send(:alias_method, :real_po_dir, :po_dir)
+    CurtailRb::Paths.define_singleton_method(:po_dir) { dir }
+    CurtailRb::I18n.instance_variable_set(:@linguas, nil)
+    yield
+  ensure
+    CurtailRb::Paths.singleton_class.send(:alias_method, :po_dir, :real_po_dir)
+    CurtailRb::I18n.instance_variable_set(:@linguas, nil)
+    CurtailRb::I18n.reset!
   end
 end

@@ -1,11 +1,18 @@
 # frozen_string_literal: true
 
+require_relative 'i18n'
+
 module CurtailRb
   # Curtail's two-page preferences sheet. Every row writes its GSettings key
   # straight through; the Safe Mode switch additionally re-syncs the window's
   # subtitle, its warning banner, and the two rows that only apply in safe mode.
   class PreferencesDialog
-    NAMING_MODES = %w[Suffix Prefix].freeze
+    include I18n
+    extend I18n
+
+    # Marked for extraction here, looked up where the model is built, so the
+    # combo follows the locale without the constant being rebuilt.
+    NAMING_MODES = [N_('Suffix'), N_('Prefix')].freeze
 
     def initialize(window, settings)
       @window = window
@@ -137,14 +144,14 @@ module CurtailRb
 
     def dialog
       @dialog ||= Adwaita::PreferencesDialog.new.tap do |d|
-        d.title = 'Preferences'
+        d.title = _('Preferences')
       end
     end
 
     def general_page
       @general_page ||= Adwaita::PreferencesPage.new.tap do |page|
         page.name = 'general'
-        page.title = 'General'
+        page.title = _('General')
         page.icon_name = 'applications-system-symbolic'
       end
     end
@@ -152,7 +159,7 @@ module CurtailRb
     def formats_page
       @formats_page ||= Adwaita::PreferencesPage.new.tap do |page|
         page.name = 'formats'
-        page.title = 'Formats'
+        page.title = _('Formats')
         page.icon_name = 'image-x-generic-symbolic'
       end
     end
@@ -185,17 +192,17 @@ module CurtailRb
 
     def new_file_row
       @new_file_row ||= switch_row(
-        'Safe Mode',
-        'Save the compressed image in a new file',
+        _('Safe Mode'),
+        _('Save the compressed image in a new file'),
         @settings.new_file,
       )
     end
 
     def naming_mode_row
       @naming_mode_row ||= Adwaita::ComboRow.new.tap do |row|
-        row.title = 'Naming Mode'
-        row.subtitle = 'Select between suffix and prefix'
-        row.model = Gtk::StringList.new(NAMING_MODES)
+        row.title = _('Naming Mode')
+        row.subtitle = _('Select between suffix and prefix')
+        row.model = Gtk::StringList.new(NAMING_MODES.map { |mode| _(mode) })
         row.selected = @settings.naming_mode
         row.sensitive = @settings.new_file
       end
@@ -203,7 +210,7 @@ module CurtailRb
 
     def suffix_prefix_row
       @suffix_prefix_row ||= Adwaita::EntryRow.new.tap do |row|
-        row.title = 'New File Suffix/Prefix'
+        row.title = _('New File Suffix/Prefix')
         row.text = @settings.suffix_prefix
         row.sensitive = @settings.new_file
       end
@@ -211,49 +218,51 @@ module CurtailRb
 
     def recursive_row
       @recursive_row ||= switch_row(
-        'Recursive Compression',
-        'Enable or disable compression through subdirectories',
+        _('Recursive Compression'),
+        _('Enable or disable compression through subdirectories'),
         @settings.recursive,
       )
     end
 
     def metadata_row
       @metadata_row ||= switch_row(
-        'Keep Metadata',
-        'Keep metadata chunks that do not affect rendering',
+        _('Keep Metadata'),
+        _('Keep metadata chunks that do not affect rendering'),
         @settings.metadata,
       )
     end
 
     def file_attributes_row
       @file_attributes_row ||= switch_row(
-        'Keep File Attributes When Possible',
-        'Ensure the new file has the same permissions and timestamps as ' \
-        'the original file',
+        _('Keep File Attributes When Possible'),
+        _(
+          'Ensure the new file has the same permissions and timestamps as ' \
+                    'the original file',
+        ),
         @settings.file_attributes,
       )
     end
 
     def jpg_progressive_row
       @jpg_progressive_row ||= switch_row(
-        'Progressive Encode',
-        'Enable incremental image rendering, going from blurry to clear',
+        _('Progressive Encode'),
+        _('Enable incremental image rendering, going from blurry to clear'),
         @settings.jpg_progressive,
       )
     end
 
     def svg_maximum_row
       @svg_maximum_row ||= switch_row(
-        'Maximum Compression Level',
-        'This can be more destructive for the image',
+        _('Maximum Compression Level'),
+        _('This can be more destructive for the image'),
         @settings.svg_maximum_level,
       )
     end
 
     def timeout_row
       @timeout_row ||= spin_row(
-        'Compression Timeout',
-        'Set the timeout between images',
+        _('Compression Timeout'),
+        _('Set the timeout between images'),
         Gtk::Adjustment.new(
           @settings.compression_timeout,
           1,
@@ -267,49 +276,50 @@ module CurtailRb
 
     def png_lossy_row
       @png_lossy_row ||= spin_row(
-        'Lossy Compression',
-        QUALITY_SUBTITLE,
+        _('Lossy Compression'),
+        _(QUALITY_SUBTITLE),
         quality_adjustment(@settings.png_lossy_level),
       )
     end
 
     def png_lossless_row
       @png_lossless_row ||= spin_row(
-        'Lossless Compression',
-        LEVEL_SUBTITLE,
+        _('Lossless Compression'),
+        _(LEVEL_SUBTITLE),
         level_adjustment(@settings.png_lossless_level),
       )
     end
 
     def jpg_lossy_row
       @jpg_lossy_row ||= spin_row(
-        'Lossy Compression',
-        QUALITY_SUBTITLE,
+        _('Lossy Compression'),
+        _(QUALITY_SUBTITLE),
         quality_adjustment(@settings.jpg_lossy_level),
       )
     end
 
     def webp_lossy_row
       @webp_lossy_row ||= spin_row(
-        'Lossy Compression',
-        QUALITY_SUBTITLE,
+        _('Lossy Compression'),
+        _(QUALITY_SUBTITLE),
         quality_adjustment(@settings.webp_lossy_level),
       )
     end
 
     def webp_lossless_row
       @webp_lossless_row ||= spin_row(
-        'Lossless Compression',
-        LEVEL_SUBTITLE,
+        _('Lossless Compression'),
+        _(LEVEL_SUBTITLE),
         level_adjustment(@settings.webp_lossless_level),
       )
     end
 
+    # Shared by three rows each; marked here, looked up at each use.
     QUALITY_SUBTITLE =
-      'Set the quality of the generated image, 100 is the best quality'
+      N_('Set the quality of the generated image, 100 is the best quality')
 
     LEVEL_SUBTITLE =
-      'Set the level of compression, 6 is the highest but slowest level'
+      N_('Set the level of compression, 6 is the highest but slowest level')
 
     def quality_adjustment(value)
       Gtk::Adjustment.new(

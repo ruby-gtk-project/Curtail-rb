@@ -10,6 +10,8 @@ module CurtailRb
 
     def icon_dir = File.join(data_dir, 'icons')
 
+    def po_dir = File.expand_path('../../po', __dir__)
+
     def schema_file
       File.join(data_dir, 'com.github.huluti.Curtail.Rb.gschema.xml')
     end

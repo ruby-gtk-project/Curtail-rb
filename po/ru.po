@@ -1,0 +1,826 @@
+# curtail.pot
+# Copyright (C) 2021 Hugo Posnic
+# This file is distributed under the same license as the curtail package.
+# Hugo Posnic <hugo.posnic@protonmail.com>, 2019.
+# Alexandre Prokoudine <alexandre.prokoudine@gmail.com>, 2021-2022.
+# Ser82-png <asvmail.as@gmail.com>, 2023-2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: curtail\n"
+"Report-Msgid-Bugs-To: https://github.com/Huluti/Curtail/issues\n"
+"POT-Creation-Date: 2026-04-20 21:38+0000\n"
+"PO-Revision-Date: 2026-05-01 10:44+1000\n"
+"Last-Translator: Ser82-png <asvmail.as@gmail.com>\n"
+"Language-Team: Russian <gnome-cyr@lists.gnome.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#: data/com.github.huluti.Curtail.appdata.xml.in:7
+#: data/com.github.huluti.Curtail.desktop.in:2 data/ui/window.blp:29
+#: data/ui/window.blp:53 data/ui/window.blp:78
+msgid "Curtail"
+msgstr "Curtail"
+
+#: data/com.github.huluti.Curtail.appdata.xml.in:8
+#: data/com.github.huluti.Curtail.desktop.in:4
+msgid "Compress your images"
+msgstr "Сжатие изображений"
+
+#: data/com.github.huluti.Curtail.appdata.xml.in:10
+msgid ""
+"Optimize your images with Curtail, a useful image compressor that supports "
+"PNG, JPEG, WebP and SVG file types."
+msgstr ""
+"Оптимизируйте свои изображения с помощью Curtail, удобного графического "
+"компрессора, поддерживающего работу с файлами форматов PNG, JPEG, WebP и SVG."
+
+#: data/com.github.huluti.Curtail.appdata.xml.in:12
+msgid ""
+"It supports both lossless and lossy compression modes with an option to "
+"whether keep or not metadata of images."
+msgstr ""
+"Приложение поддерживает сжатие с потерями и без потерь в качестве и "
+"позволяет выбрать, сохранять ли метаданные."
+
+#. Keywords, do not translate
+#: data/com.github.huluti.Curtail.desktop.in:15
+msgid "compress;optimize;image;photo;"
+msgstr "compress;optimize;image;photo;сжатие;оптимизация;изображение;фото;"
+
+#: data/com.github.huluti.Curtail.gschema.xml:6
+msgid "Save into a new file"
+msgstr "Сохранить в новый файл"
+
+#: data/com.github.huluti.Curtail.gschema.xml:7
+msgid "Save the compressed image into a new file."
+msgstr "Сохранять сжатые данные в новый файл."
+
+#: data/com.github.huluti.Curtail.gschema.xml:11
+msgid "Select the mode to append text for a new file"
+msgstr "Выберите способ добавления текста в название нового файла"
+
+#: data/com.github.huluti.Curtail.gschema.xml:12
+msgid ""
+"Set how to append the additional text (as suffix or prefix) for a new file."
+msgstr ""
+"Укажите, как добавлять дополнительный текст (в виде суффикса или префикса) в "
+"название нового файла."
+
+#: data/com.github.huluti.Curtail.gschema.xml:16
+msgid "Enable recursive compression in folders"
+msgstr "Включить рекурсивное сжатие в папках"
+
+#: data/com.github.huluti.Curtail.gschema.xml:17
+msgid "This setting enable compression in a recursive way in folders."
+msgstr "Выполнять рекурсивное сжатие в папках."
+
+#: data/com.github.huluti.Curtail.gschema.xml:21
+msgid "Preserve metadata"
+msgstr "Сохранять метаданные"
+
+#: data/com.github.huluti.Curtail.gschema.xml:22
+msgid "This setting preserves metadata of images."
+msgstr "Не удалять уже существующие метаданные изображений."
+
+#: data/com.github.huluti.Curtail.gschema.xml:26
+msgid "Preserve file permissions and timestamps if possible"
+msgstr "По возможности сохранять права доступа к файлам и временные метки"
+
+#: data/com.github.huluti.Curtail.gschema.xml:27
+msgid "This setting file permissions and timestamps of images if possible."
+msgstr ""
+"Настройте права доступа к файлам и временные метки изображений, если это "
+"возможно."
+
+#: data/com.github.huluti.Curtail.gschema.xml:31
+msgid "Enable lossy mode"
+msgstr "Включить режим с потерей качества"
+
+#: data/com.github.huluti.Curtail.gschema.xml:32
+msgid "Use lossy mode to compress images."
+msgstr "Использовать режим с потерей качества для сжатия изображений."
+
+#: data/com.github.huluti.Curtail.gschema.xml:36
+msgid "Suffix/Prefix to append at new file"
+msgstr "Суффикс/Префикс, добавляемый к имени нового файла"
+
+#: data/com.github.huluti.Curtail.gschema.xml:37
+msgid "Suffix/Prefix to append at new file."
+msgstr "Суффикс/Префикс, добавляемый к имени нового файла."
+
+#: data/com.github.huluti.Curtail.gschema.xml:41
+msgid "PNG Lossy Compression Level"
+msgstr "Уровень сжатия PNG с потерями"
+
+#: data/com.github.huluti.Curtail.gschema.xml:42
+msgid "Lossy compression level to use for PNG images."
+msgstr "Уровень сжатия с потерей качества для изображений PNG."
+
+#: data/com.github.huluti.Curtail.gschema.xml:46
+msgid "PNG Lossless Compression Level"
+msgstr "Уровень сжатия PNG без потерь"
+
+#: data/com.github.huluti.Curtail.gschema.xml:47
+msgid "Lossless compression level to use for PNG images."
+msgstr "Уровень сжатия без потери качества для изображений PNG."
+
+#: data/com.github.huluti.Curtail.gschema.xml:51
+msgid "JPG Lossy Compression Level"
+msgstr "Уровень сжатия JPEG с потерями"
+
+#: data/com.github.huluti.Curtail.gschema.xml:52
+msgid "Lossy compression level to use for JPG images."
+msgstr "Уровень сжатия с потерей качества для изображений JPEG."
+
+#: data/com.github.huluti.Curtail.gschema.xml:56
+msgid "WebP Lossy Compression Level"
+msgstr "Уровень сжатия WebP с потерями"
+
+#: data/com.github.huluti.Curtail.gschema.xml:57
+msgid "Lossy compression level to use for WebP images."
+msgstr "Уровень сжатия с потерей качества для изображений WebP."
+
+#: data/com.github.huluti.Curtail.gschema.xml:61
+msgid "WebP Lossless Compression Level"
+msgstr "Уровень сжатия WebP без потерь"
+
+#: data/com.github.huluti.Curtail.gschema.xml:62
+msgid "Lossless compression level to use for WebP images."
+msgstr "Уровень сжатия без потери качества для изображений WebP."
+
+#: data/com.github.huluti.Curtail.gschema.xml:66
+msgid "Enable progressive encoding for JPEG images"
+msgstr "Использовать прогрессивное кодирование при записи файлов JPEG"
+
+#: data/com.github.huluti.Curtail.gschema.xml:67
+msgid "Optionally encode jpeg images progressively."
+msgstr "Записывать прогрессивный JPEG."
+
+#: data/com.github.huluti.Curtail.gschema.xml:71
+msgid "Enable maximum compression for SVG images"
+msgstr "Использовать максимальное сжатие при записи файлов PNG"
+
+#: data/com.github.huluti.Curtail.gschema.xml:72
+msgid "Enable maximum cleaning of SVG images."
+msgstr "Использовать максимальную очистку изображений SVG."
+
+#: data/com.github.huluti.Curtail.gschema.xml:76 data/ui/preferences.blp:50
+msgid "Compression Timeout"
+msgstr "Ограничение времени сжатия"
+
+#: data/com.github.huluti.Curtail.gschema.xml:77
+msgid "Compression timeout for each image."
+msgstr "Ограничить время сжатия для каждого изображения."
+
+#: data/ui/preferences.blp:5 data/ui/window.blp:12
+msgid "Preferences"
+msgstr "Параметры"
+
+#: data/ui/preferences.blp:9
+msgid "General"
+msgstr "Общие"
+
+#: data/ui/preferences.blp:14
+msgid "Safe Mode"
+msgstr "Безопасный режим"
+
+#: data/ui/preferences.blp:15
+msgid "Save the compressed image in a new file"
+msgstr "Сохранять сжатое изображение в новый файл"
+
+#: data/ui/preferences.blp:19
+msgid "Naming Mode"
+msgstr "Метод именования"
+
+#: data/ui/preferences.blp:20
+msgid "Select between suffix and prefix"
+msgstr "Выберите между суффиксом и префиксом"
+
+#: data/ui/preferences.blp:24
+msgid "Suffix"
+msgstr "Суффикс"
+
+#: data/ui/preferences.blp:25
+msgid "Prefix"
+msgstr "Префикс"
+
+#: data/ui/preferences.blp:31
+msgid "New File Suffix/Prefix"
+msgstr "Суффикс/Префикс нового файла"
+
+#: data/ui/preferences.blp:35
+msgid "Recursive Compression"
+msgstr "Рекурсивное сжатие"
+
+#: data/ui/preferences.blp:36
+msgid "Enable or disable compression through subdirectories"
+msgstr "Включить или отключить сжатие с подкаталогами"
+
+#: data/ui/preferences.blp:40
+msgid "Keep Metadata"
+msgstr "Сохранять метаданные"
+
+#: data/ui/preferences.blp:41
+msgid "Keep metadata chunks that do not affect rendering"
+msgstr "Сохранять фрагменты метаданных, которые не влияют на рендеринг"
+
+#: data/ui/preferences.blp:45
+msgid "Keep File Attributes When Possible"
+msgstr "Сохранять атрибуты файла, когда это возможно"
+
+#: data/ui/preferences.blp:46
+msgid ""
+"Ensure the new file has the same permissions and timestamps as the original "
+"file"
+msgstr ""
+"Убедитесь, что новый и исходный файлы имеют одинаковые права доступа и "
+"временные метки"
+
+#: data/ui/preferences.blp:51
+msgid "Set the timeout between images"
+msgstr "Установить временной интервал между изображениями"
+
+#: data/ui/preferences.blp:65
+msgid "Formats"
+msgstr "Форматы"
+
+#: data/ui/preferences.blp:72 data/ui/preferences.blp:98
+#: data/ui/preferences.blp:118
+msgid "Lossy Compression"
+msgstr "Сжатие с потерями"
+
+#: data/ui/preferences.blp:73 data/ui/preferences.blp:99
+#: data/ui/preferences.blp:119
+msgid "Set the quality of the generated image, 100 is the best quality"
+msgstr ""
+"Установите качество сгенерированного изображения. 100% - это наилучшее "
+"качество"
+
+#: data/ui/preferences.blp:83 data/ui/preferences.blp:129
+msgid "Lossless Compression"
+msgstr "Сжатие без потерь"
+
+#: data/ui/preferences.blp:84 data/ui/preferences.blp:130
+msgid "Set the level of compression, 6 is the highest but slowest level"
+msgstr ""
+"Установите уровень сжатия. Самый лучший уровень сжатия (но самый медленный) "
+"соответствует 6"
+
+#: data/ui/preferences.blp:109
+msgid "Progressive Encode"
+msgstr "Прогрессивное кодирование"
+
+#: data/ui/preferences.blp:110
+msgid "Enable incremental image rendering, going from blurry to clear"
+msgstr "Включить постепенную отрисовку изображения: от размытого до чёткого"
+
+#: data/ui/preferences.blp:144
+msgid "Maximum Compression Level"
+msgstr "Максимальный уровень сжатия"
+
+#: data/ui/preferences.blp:145
+msgid "This can be more destructive for the image"
+msgstr "Изображения при этом могут быть повреждены"
+
+#: data/ui/result-item-row.blp:8 data/ui/result-item-row.blp:34
+msgid "More Information"
+msgstr "Дополнительная информация"
+
+#: data/ui/result-item-row.blp:18
+msgid ""
+"Compression was skipped because compressing the file would have resulted in "
+"a larger file size."
+msgstr ""
+"Сжатие было пропущено, поскольку это действие могло привести к увеличению "
+"размера файла."
+
+#: data/ui/shortcuts-dialog.blp:6
+msgctxt "shortcuts dialog"
+msgid "General"
+msgstr "Общие"
+
+#: data/ui/shortcuts-dialog.blp:9
+msgctxt "shortcuts dialog"
+msgid "Select File"
+msgstr "Выбрать файл"
+
+#: data/ui/shortcuts-dialog.blp:14
+msgctxt "shortcuts dialog"
+msgid "Preferences"
+msgstr "Параметры"
+
+#: data/ui/shortcuts-dialog.blp:19
+msgctxt "shortcuts dialog"
+msgid "Keyboard Shortcuts"
+msgstr "Комбинации клавиш"
+
+#: data/ui/shortcuts-dialog.blp:24
+msgctxt "shortcuts dialog"
+msgid "Quit"
+msgstr "Выйти"
+
+#: data/ui/window.blp:7
+msgid "Bulk Compress Directory"
+msgstr "Массовое сжатие каталогов"
+
+#: data/ui/window.blp:17
+msgid "Keyboard Shortcuts"
+msgstr "Комбинации клавиш"
+
+#: data/ui/window.blp:22
+msgid "About Curtail"
+msgstr "О приложении"
+
+#: data/ui/window.blp:41 src/window.py:217
+msgid "Browse Files"
+msgstr "Обзор файлов"
+
+#: data/ui/window.blp:48
+msgid "Clear Results"
+msgstr "Очистить результаты"
+
+#: data/ui/window.blp:60
+msgid "Main Menu"
+msgstr "Главное меню"
+
+#: data/ui/window.blp:71
+msgid "_Change Mode"
+msgstr "_Изменить режим"
+
+#: data/ui/window.blp:72
+msgid "Images will be overwritten, proceed carefully"
+msgstr "Используйте с осторожностью, т.к. изображения будут перезаписаны"
+
+#: data/ui/window.blp:79
+msgid "Drop images here to compress them"
+msgstr "Перетащите сюда изображения для их сжатия"
+
+#: data/ui/window.blp:90
+msgid "_Browse Files"
+msgstr "_Укажите файлы"
+
+#: data/ui/window.blp:105
+msgid "Lossless"
+msgstr "Без потерь"
+
+#: data/ui/window.blp:110
+msgid "Lossy"
+msgstr "С потерями"
+
+#: data/ui/window.blp:119
+msgid "Analyzing Images"
+msgstr "Анализ изображений"
+
+#: data/ui/window.blp:120
+msgid "Analyzing your images before compression…"
+msgstr "Анализ ваших изображений перед сжатием…"
+
+#: src/compressor.py:43
+msgid "An unknown error has occurred."
+msgstr "Произошла неизвестная ошибка."
+
+#: src/compressor.py:82
+msgid "Can't find the compressed file"
+msgstr "Не удалось найти сжатый файл"
+
+#: src/tools.py:14
+msgid "All images"
+msgstr "Все изображения"
+
+#: src/tools.py:21
+msgid "PNG images"
+msgstr "Изображения PNG"
+
+#: src/tools.py:25
+msgid "JPEG images"
+msgstr "Изображения JPEG"
+
+#: src/tools.py:29
+msgid "WebP images"
+msgstr "Изображения WebP"
+
+#: src/tools.py:33
+msgid "SVG images"
+msgstr "Изображения SVG"
+
+#: src/tools.py:123 src/tools.py:130 src/tools.py:137 src/tools.py:144
+#: src/tools.py:151 src/tools.py:176
+msgid "Version not found"
+msgstr "Версия не найдена"
+
+#: src/window.py:146
+msgid "Skipped"
+msgstr "Пропущено"
+
+#: src/window.py:178
+msgid "Open Image"
+msgstr "Открыть изображение"
+
+#: src/window.py:179
+msgid "Show in Folder"
+msgstr "Показать в папке"
+
+#: src/window.py:207
+msgid "Overwrite mode"
+msgstr "Режим перезаписи"
+
+#: src/window.py:235
+msgid "Browse Directories"
+msgstr "Укажите каталоги"
+
+#: src/window.py:261 src/window.py:270
+msgid "Are you sure you want to compress images in these directories?"
+msgstr "Вы уверены, что хотите сжать изображения в этих каталогах?"
+
+#: src/window.py:263
+msgid ""
+"All of the images in the directories selected and their subdirectories will "
+"be compressed. The original images will not be modified."
+msgstr ""
+"Все изображения в выбранных каталогах и подкаталогах будут сжаты. Но "
+"исходные файлы не изменятся."
+
+#: src/window.py:272
+msgid ""
+"All of the images in the directories selected and their subdirectories will "
+"be compressed and overwritten!"
+msgstr ""
+"Все изображения в выбранных каталогах и подкаталогах будут сжаты и "
+"перезаписаны!"
+
+#: src/window.py:277
+msgid "Cancel"
+msgstr "Отменить"
+
+#: src/window.py:278
+msgid "Compress"
+msgstr "Сжать"
+
+#: src/window.py:316
+msgid "No files found"
+msgstr "Файлы не найдены"
+
+#: src/window.py:367
+msgid "translator-credits"
+msgstr ""
+"Alexandre Prokoudine <alexandre.prokoudine@gmail.com>\n"
+"Ser82-png <savmail.as@gmail.com>"
+
+#: src/window.py:371
+msgid "Contributors"
+msgstr "Участники"
+
+#~ msgid "Compression has reached the configured timeout of {} seconds."
+#~ msgstr "Время ограничения сжатия достигло заданного значения {} секунд."
+
+#~ msgid "Format of this file is not supported."
+#~ msgstr "Формат этого файла не поддерживается."
+
+#~ msgid "Unable to read file information."
+#~ msgstr "Не удалось прочитать информацию о файле."
+
+#~ msgid "Getting things ready"
+#~ msgstr "Подготовка"
+
+#~ msgid "Hugo Posnic"
+#~ msgstr "Hugo Posnic"
+
+#~ msgctxt "shortcut window"
+#~ msgid "General"
+#~ msgstr "Общие"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Preferences"
+#~ msgstr "Параметры"
+
+#~ msgctxt "shortcut window"
+#~ msgid "Keyboard Shortcuts"
+#~ msgstr "Комбинации клавиш"
+
+#, python-brace-format
+#~ msgid "Safe mode with “{suffix_prefix}” suffix"
+#~ msgstr "Безопасный режим с суффиксом «{suffix_prefix}»"
+
+#, python-brace-format
+#~ msgid "Safe mode with “{suffix_prefix}” prefix"
+#~ msgstr "Безопасный режим с префиксом «{suffix_prefix}»"
+
+#~ msgid "This file doesn't exist."
+#~ msgstr "Этот файл не существует."
+
+#~ msgid "Safe mode with '{}' {}"
+#~ msgstr "Безопасный режим с '{}' {}"
+
+#~ msgid "compress"
+#~ msgstr "сжать"
+
+#~ msgid "optimize"
+#~ msgstr "оптимизировать"
+
+#~ msgid "image"
+#~ msgstr "изображение"
+
+#~ msgid "photo"
+#~ msgstr "фотография"
+
+#~ msgid "Compression timeout"
+#~ msgstr "Ограничение времени сжатия"
+
+#~ msgid "For each image"
+#~ msgstr "Для каждого изображения"
+
+#~ msgid "Here's the changelog of this version:"
+#~ msgstr "Вот список изменений в этой версии:"
+
+#~ msgid "Add WebP support. Thank's to @olokelo."
+#~ msgstr "Добавлена поддержка WebP. Спасибо @olokelo."
+
+#~ msgid "Add Croatian translation. Thank's to @milotype."
+#~ msgstr "Добавлен перевод на хорватский. Спасибо @milotype."
+
+#~ msgid "Update Spanish translation. Thank's to @oscfdezdz."
+#~ msgstr "Добавлен перевод на испанский. Спасибо @oscfdezdz."
+
+#~ msgid "Update Portuguese (Brazil) translation. Thank's to @fulvio-alves."
+#~ msgstr ""
+#~ "Обновлен перевод на бразильский португальский. Спасибо @fulvio-alves."
+
+#~ msgid "Don't accept empty file. Thank's to @akozlovskiy119."
+#~ msgstr "Больше не обрабатываются пустые файлы. Спасибо @akozlovskiy119."
+
+#~ msgid "Better guess of extensions. Thank's to @akozlovskiy119."
+#~ msgstr "Лучше угадываются расширения файлов. Спасибо @akozlovskiy119."
+
+#~ msgid ""
+#~ "Use correct file listing format for drag-and-drop. Thank's to "
+#~ "@akozlovskiy119."
+#~ msgstr ""
+#~ "Используется корректный формат перечисления файлов для перетаскивания. "
+#~ "Спасибо @akozlovskiy119."
+
+#~ msgid "Fix directory handling. Thank's to @akozlovskiy119."
+#~ msgstr "Исправлена обработка каталогов. Спасибо @akozlovskiy119."
+
+#~ msgid "Fix missing icon in LXQt, MATE, XFCE (#76). Thank's to @apandada1."
+#~ msgstr ""
+#~ "Исправлен отсутствующий значок в LXQt, MATE, XFCE (#76). Спасибо "
+#~ "@apandada1."
+
+#~ msgid "An option to progressive encode jpegs. Thank's to @trst."
+#~ msgstr "Добавлена запись прогрессивных JPEG. Спасибо @trst."
+
+#~ msgid "Add Russian translation."
+#~ msgstr "Добавлен перевод на русский."
+
+#~ msgid "Add Slovak translation."
+#~ msgstr "Добавлен перевод на словацкий."
+
+#~ msgid "Add Swedish translation."
+#~ msgstr "Добавлен перевод на шведский."
+
+#~ msgid "Better handling of existing files."
+#~ msgstr "Улучшена обработка ситуаций, когда файлы уже существуют"
+
+#~ msgid "Better appdata summary."
+#~ msgstr "Улучшено описание в appdata."
+
+#~ msgid "Update Spanish translation."
+#~ msgstr "Обновлен перевод на испанский."
+
+#~ msgid "Compress images with extensions in uppercase."
+#~ msgstr ""
+#~ "Теперь можно сжимать изображения с расширением файла в верхнем регистре"
+
+#~ msgid "Center preferences window header switcher. Thank's to @andrenete."
+#~ msgstr ""
+#~ "Окно настроек программы теперь центрируется на экране. Спасибо @andrenete."
+
+#~ msgid "Fix columns sorting. Thank's to @andrenete."
+#~ msgstr "Исправлена сортировка в столбцах. Спасибо @andrenete."
+
+#~ msgid ""
+#~ "Don't allow empty suffix (incorrect compression for JPEG). Thank's to "
+#~ "@andrenete."
+#~ msgstr ""
+#~ "Больше не принимается пустой суффикс, из-за чего некорректно сжимались "
+#~ "JPEG. Спасибо @andrenete."
+
+#~ msgid "A new name. Thank's to @bertob, @jannuary and @jimmac."
+#~ msgstr "Новое название программы. Спасибо @bertob, @jannuary и @jimmac."
+
+#~ msgid "A new icon designed by @jimmac."
+#~ msgstr "Новый значок программы, дизайн выполнил @jimmac."
+
+#~ msgid "Support for dragging folders."
+#~ msgstr "Добавлена поддержка перетаскивания папок"
+
+#~ msgid "Just fix a packaging file."
+#~ msgstr "Исправлен файл упаковки"
+
+#~ msgid "Just update GNOME runtime"
+#~ msgstr "Обновлена среда выполнения GNOME"
+
+#~ msgid "Add Portuguese (Brazil) translation"
+#~ msgstr "Добавлен перевод на бразильский португальский"
+
+#~ msgid "Don't use legacy path for metadata"
+#~ msgstr "Больше не используется старый путь к метаданным"
+
+#~ msgid "Fix compression of jpg files that produced 0b files"
+#~ msgstr "Исправлена ошибка сжатия JPEG, при которой писались пустые файлы"
+
+#~ msgid "Add an option to whether keep or not metadata of images"
+#~ msgstr "Добавлен переключатель сохранения метаданных"
+
+#~ msgid "Replace mozjpeg lib by jpegoptim"
+#~ msgstr "Библиотека mozjpeg заменена на jpegoptim"
+
+#~ msgid "Update translations"
+#~ msgstr "Обновлены переводы"
+
+#~ msgid "Add a spinner to indicate the progress of the compression"
+#~ msgstr "Добавлен вращающийся индикатор прогресса сжатия"
+
+#~ msgid "Using threads to compress images simultaneously"
+#~ msgstr "Изображения теперь сжимаются в несколько одновременных потоков"
+
+#~ msgid "Simplification of certain sentences"
+#~ msgstr "Некоторые предложения упрощены"
+
+#~ msgid "Really don't block the UI anymore when performing compression"
+#~ msgstr "Ну теперь интерфейс точно не блокируется при сжимании изображений"
+
+#~ msgid "Add lossy compression features"
+#~ msgstr "Добавлена возможность сжимать с потерей качества"
+
+#~ msgid "Add options to change compression levels"
+#~ msgstr "Добавлены настройки уровней сжатия"
+
+#~ msgid "New layout for the preferences dialog"
+#~ msgstr "Обновлен дизайн диалога настройки программы"
+
+#~ msgid "Don't permit higher resulting size"
+#~ msgstr "Больший конечный размер файлов больше не допускается"
+
+#~ msgid "Better displaying of the drag area"
+#~ msgstr "Область перетаскивания изображений стала очевиднее"
+
+#~ msgid "Catch errors in subprocess to avoid crashing the app"
+#~ msgstr "Теперь ошибки отлавливаются подпроцессом, чтобы программа не падала"
+
+#~ msgid "Fix build"
+#~ msgstr "Исправлена сборка"
+
+#~ msgid "Fix opening files from file managers"
+#~ msgstr "Исправлена ошибка при открытии файлов из файловых менеджеров"
+
+#~ msgid "Add Italian translation"
+#~ msgstr "Добавлен перевод на итальянский язык"
+
+#~ msgid "Toggle the suffix entry according to new file option"
+#~ msgstr ""
+#~ "Теперь ввод суффикса переключается в соответствии с настройками для новых "
+#~ "файлов"
+
+#~ msgid "Scroll automatically to last compressed image in the list"
+#~ msgstr ""
+#~ "Теперь список автоматически прокручивается до последнего сжатого "
+#~ "изображения"
+
+#~ msgid "Improve handling of filenames to avoid some errors (e.g., folders)"
+#~ msgstr ""
+#~ "Улучшена обработка имен файлов, чтобы избегать некоторых ошибок, "
+#~ "например, с папками"
+
+#~ msgid "Various fixes"
+#~ msgstr "Разные исправления"
+
+#~ msgid "Add a setting to change the '-min' suffix"
+#~ msgstr "Добавлена возможность поменять суффикс '-min' на другой"
+
+#~ msgid "Add some explanations of applied settings"
+#~ msgstr "Добавлены пояснения к примененным параметрам"
+
+#~ msgid "Add Ctrl+O shortcut to open files"
+#~ msgstr "Добавлена комбинация Ctrl+O для открытия файлов"
+
+#~ msgid "Add Dutch and German translations"
+#~ msgstr "Добавлены переводы на нидерландский и немецкий"
+
+#~ msgid "Display translators' names in about dialog"
+#~ msgstr "Имена переводчиков теперь показываются в диалоге о программе"
+
+#~ msgid "Don't block the UI anymore when performing compression"
+#~ msgstr "Интерфейс больше не блокируется во время сжатия"
+
+#~ msgid "Fix size of the preferences window"
+#~ msgstr "Исправлен размер диалога настройки"
+
+#~ msgid "Add a preferences window with new-file and dark-theme options"
+#~ msgstr ""
+#~ "Добавлен диалог настройки программы с параметрами создания новых файлов и "
+#~ "возможностью выбрать темную тему"
+
+#~ msgid "Various UI changes"
+#~ msgstr "Разные изменения в пользовательском интерфейсе"
+
+#~ msgid "Permit to sort results by name or saving ratio"
+#~ msgstr ""
+#~ "Теперь можно сортировать результаты по имени файлов или по степени их "
+#~ "сжатия"
+
+#~ msgid "Fix a crash when compressing an image with dots in its name"
+#~ msgstr "Исправлено падение при сжатии изображения с точкой в имени файла"
+
+#~ msgid "Various optimizations"
+#~ msgstr "Разные оптимизации"
+
+#~ msgid "Improve error messages"
+#~ msgstr "Улучшены сообщения об ошибках"
+
+#~ msgid "Improve some texts"
+#~ msgstr "Переписаны некоторые тексты"
+
+#~ msgid "Change description"
+#~ msgstr "Изменено описание"
+
+#~ msgid "Initial version"
+#~ msgstr "Первая публичная версия"
+
+#~ msgid "Enable dark theme"
+#~ msgstr "Использовать темную тему"
+
+#~ msgid "Use dark theme for the windows."
+#~ msgstr "Использовать темную тему оформления в окнах программы"
+
+#~ msgid "Drag and drop your images here..."
+#~ msgstr "Перетащите и бросьте сюда изображения…"
+
+#~ msgid "or"
+#~ msgstr "или"
+
+#~ msgid ""
+#~ "PNG Lossless Compression Level\n"
+#~ "(the higher it is, the slower it is)"
+#~ msgstr ""
+#~ "Уровень сжатия PNG без потерь\n"
+#~ "(чем выше значение, тем медленнее сжатие)"
+
+#~ msgid ""
+#~ "WebP Lossless Compression Level\n"
+#~ "(the higher it is, the slower it is)"
+#~ msgstr ""
+#~ "Уровень сжатия WebP без потерь\n"
+#~ "(чем выше значение, тем медленнее сжатие)"
+
+#~ msgid "Advanced"
+#~ msgstr "Дополнительно"
+
+#~ msgid "File already exists"
+#~ msgstr "Файл уже существует"
+
+#~ msgid "Apply to all queue"
+#~ msgstr "Применить ко всей очереди"
+
+#~ msgid "Filename"
+#~ msgstr "Имя файла"
+
+#~ msgid "Old Size"
+#~ msgstr "Старый размер"
+
+#~ msgid "New Size"
+#~ msgstr "Новый размер"
+
+#~ msgid "Savings"
+#~ msgstr "Экономия"
+
+#~ msgid "Images are <b>overwritten</b>."
+#~ msgstr "Файлы изображений <b>перезаписаны</b>."
+
+#~ msgid "Format not supported"
+#~ msgstr "Формат не поддерживается"
+
+#~ msgid "Path not valid"
+#~ msgstr "Некорректно указано расположение"
+
+#~ msgid "Distributed under the GNU GPL(v3) license.\n"
+#~ msgstr "Распространяется на условиях GNU GPL(v3) license.\n"
+
+#~ msgid ""
+#~ "The file <b>{}</b> already exists.\n"
+#~ "Do you want to compress the image anyway?"
+#~ msgstr ""
+#~ "Файл <b>{}</b> уже существует.\n"
+#~ "Все равно сжать изображение?"
+
+#~ msgid "Nothing"
+#~ msgstr "Ничего"
+
+#~ msgid "{} is already compressed at max with current options."
+#~ msgstr "{} уже сжат до предела с текущими параметрами."

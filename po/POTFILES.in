@@ -1,0 +1,10 @@
+# The Ruby sources, which is where every string the app renders lives. The
+# data files (.desktop, .metainfo, .gschema) carry a handful of strings too,
+# but xgettext needs a separate pass per format for those; their entries are
+# already in the catalogues and change about once a release.
+lib/curtail_rb/compressor.rb
+lib/curtail_rb/preferences_dialog.rb
+lib/curtail_rb/result_item_manager.rb
+lib/curtail_rb/result_item_row.rb
+lib/curtail_rb/tools.rb
+lib/curtail_rb/window.rb

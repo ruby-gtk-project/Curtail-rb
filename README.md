@@ -6,7 +6,8 @@ driving the same external tools upstream does — `oxipng`, `pngquant`,
 `jpegoptim`, `cwebp` and `scour`.
 
 Feature parity with upstream is the goal: every view, dialog, menu item,
-keyboard shortcut, preference, action and error state the original has.
+keyboard shortcut, preference, action, error state and translation the
+original has.
 
 ## Running
 
@@ -48,10 +49,35 @@ them.
 | `lib/curtail_rb/tools.rb` | thumbnails, file filters, directory walks, version probing |
 | `data/` | GSettings schema, icons, desktop entry |
 
+## Translations
+
+All 40 of upstream's catalogues ship, and the app reads `po/*.po` directly —
+there is no gettext binding in the Ruby GTK stack and no msgfmt step, so the
+files the translators wrote are the files that ship. The desktop entry and the
+metainfo do get the usual `msgfmt` merge at build time, so the app's name,
+comment and keywords are localised in the shell too.
+
+Marking follows gettext's own names, which is what `rake pot` needs to see:
+
+| Call | Means |
+|------|-------|
+| `_('Preferences')` | translate |
+| `p_('shortcuts dialog', 'General')` | translate in a context (upstream's `C_`) |
+| `N_('Suffix')` | mark for extraction; a `_()` at the point of use translates |
+
+    rake i18n      # drive the UI in fr, es, de and zh_CN
+    rake po        # msgfmt --check every catalogue
+    rake pot       # regenerate po/curtail.pot from the Ruby sources
+    rake merge     # merge that template into every catalogue
+
+Two messages translate here that do not upstream. Upstream builds them with
+f-strings and then calls gettext, so the finished sentence never matches a
+msgid; here the placeholder form is looked up and the value substituted after.
+That is what the translators who wrote `{}` and `{suffix_prefix}` into their
+catalogues meant to happen.
+
 ## Differences from upstream
 
-- **No translations.** Upstream ships gettext catalogues; this port is
-  English-only. Every user-visible string is the same string upstream shows.
 - **Structure.** Upstream's abstract `Compressor` plus four subclasses is one
   module with four command builders here, and the GObject property bindings
   between `ResultItem` and its row are an explicit `refresh`. No behaviour

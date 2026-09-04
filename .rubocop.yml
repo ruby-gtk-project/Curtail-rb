@@ -17,7 +17,8 @@ AllCops:
     - Gemfile
     - .direnv/**/*
     - examples/**/*
-    - result
+    - result           # the nix build symlink
+    - result/**/*
     - vendor/**/*
     - tmp/**/*
     - node_modules/**/*

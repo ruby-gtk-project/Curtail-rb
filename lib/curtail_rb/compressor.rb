@@ -3,12 +3,16 @@
 require 'open3'
 require 'shellwords'
 
+require_relative 'i18n'
+
 module CurtailRb
   # Upstream has an abstract Compressor plus one subclass per format, each
   # supplying a `build_command`. The shared `run` is the only behaviour they
   # have, so here the four command builders are four methods on one module and
   # `run` dispatches on the item's mime type.
   module Compressor
+    extend I18n
+
     module_function
 
     def run(item, settings)
@@ -30,7 +34,7 @@ module CurtailRb
         wait(output, waiter, settings.compression_timeout)
       end
     rescue StandardError => e
-      ['An unknown error has occurred.', escape(e.to_s)]
+      [_('An unknown error has occurred.'), escape(e.to_s)]
     end
 
     # Timeout.timeout would leave the compressor running in the background, so
@@ -40,18 +44,25 @@ module CurtailRb
       case waiter.join(timeout)
       when nil
         terminate(waiter)
-        ["Compression has reached the configured timeout of #{timeout} " \
-         'seconds.', nil
-]
+        [timeout_message(timeout), nil]
       else finish(output, waiter)
       end
+    end
+
+    # The catalogues carry this one with a `{}` placeholder, so the number is
+    # substituted after the lookup. Upstream interpolates first and then looks
+    # the finished sentence up, which never matches — so upstream shows this
+    # in English in every locale.
+    def timeout_message(timeout)
+      _('Compression has reached the configured timeout of {} seconds.')
+        .sub('{}', timeout.to_s)
     end
 
     def finish(output, waiter)
       output.read.then do |text|
         case waiter.value.success?
         when true then nil
-        else ['An unknown error has occurred.', escape(text)]
+        else [_('An unknown error has occurred.'), escape(text)]
         end
       end
     end
@@ -81,7 +92,7 @@ module CurtailRb
       Gio::File.new_for_path(item.tmp_filename).then do |new_file|
         case new_file.query_exists
         when false
-          item.error_message = "Can't find the compressed file"
+          item.error_message = _("Can't find the compressed file")
           item.error = true
         else
           adopt_output(item, new_file, settings)
