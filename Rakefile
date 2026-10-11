@@ -78,5 +78,3 @@ desc 'Run rubocop'
 task :lint do
   sh 'bundle exec rubocop'
 end
-
-task default: %i[test drive i18n po lint]
