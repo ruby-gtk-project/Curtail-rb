@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: curtail VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 14:10+0100\n"
-"PO-Revision-Date: 2026-09-04 14:10+0100\n"
+"POT-Creation-Date: 2026-11-02 15:42+0000\n"
+"PO-Revision-Date: 2026-11-02 15:42+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -96,46 +96,46 @@ msgid ""
 "le"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:246
+#: ../lib/curtail_rb/preferences_dialog.rb:248
 msgid "Progressive Encode"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:247
+#: ../lib/curtail_rb/preferences_dialog.rb:249
 msgid "Enable incremental image rendering, going from blurry to clear"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:254
+#: ../lib/curtail_rb/preferences_dialog.rb:256
 msgid "Maximum Compression Level"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:255
+#: ../lib/curtail_rb/preferences_dialog.rb:257
 msgid "This can be more destructive for the image"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:262
+#: ../lib/curtail_rb/preferences_dialog.rb:264
 msgid "Compression Timeout"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:263
+#: ../lib/curtail_rb/preferences_dialog.rb:265
 msgid "Set the timeout between images"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:277
-#: ../lib/curtail_rb/preferences_dialog.rb:293
-#: ../lib/curtail_rb/preferences_dialog.rb:301
+#: ../lib/curtail_rb/preferences_dialog.rb:279
+#: ../lib/curtail_rb/preferences_dialog.rb:295
+#: ../lib/curtail_rb/preferences_dialog.rb:303
 msgid "Lossy Compression"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:285
-#: ../lib/curtail_rb/preferences_dialog.rb:309
+#: ../lib/curtail_rb/preferences_dialog.rb:287
+#: ../lib/curtail_rb/preferences_dialog.rb:311
 msgid "Lossless Compression"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:317
+#: ../lib/curtail_rb/preferences_dialog.rb:319
 msgid "Set the quality of the generated image, 100 is the best quality"
 msgstr ""
 
-#: ../lib/curtail_rb/preferences_dialog.rb:320
+#: ../lib/curtail_rb/preferences_dialog.rb:322
 msgid "Set the level of compression, 6 is the highest but slowest level"
 msgstr ""
 
@@ -155,6 +155,31 @@ msgstr ""
 msgid ""
 "Compression was skipped because compressing the file would have resulted in a "
 "larger file size."
+msgstr ""
+
+#: ../lib/curtail_rb/shortcuts_dialog.rb:45
+msgctxt "shortcuts dialog"
+msgid "General"
+msgstr ""
+
+#: ../lib/curtail_rb/shortcuts_dialog.rb:57
+msgctxt "shortcuts dialog"
+msgid "Select File"
+msgstr ""
+
+#: ../lib/curtail_rb/shortcuts_dialog.rb:61
+msgctxt "shortcuts dialog"
+msgid "Preferences"
+msgstr ""
+
+#: ../lib/curtail_rb/shortcuts_dialog.rb:65
+msgctxt "shortcuts dialog"
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+#: ../lib/curtail_rb/shortcuts_dialog.rb:69
+msgctxt "shortcuts dialog"
+msgid "Quit"
 msgstr ""
 
 #: ../lib/curtail_rb/tools.rb:21
@@ -181,7 +206,7 @@ msgstr ""
 msgid "Version not found"
 msgstr ""
 
-#: ../lib/curtail_rb/window.rb:137
+#: ../lib/curtail_rb/window.rb:138
 msgid "No files found"
 msgstr ""
 
@@ -290,35 +315,10 @@ msgstr ""
 msgid "Show in Folder"
 msgstr ""
 
-#: ../lib/curtail_rb/window.rb:698
-msgctxt "shortcuts dialog"
-msgid "Select File"
-msgstr ""
-
-#: ../lib/curtail_rb/window.rb:702
-msgctxt "shortcuts dialog"
-msgid "Preferences"
-msgstr ""
-
-#: ../lib/curtail_rb/window.rb:706
-msgctxt "shortcuts dialog"
-msgid "Keyboard Shortcuts"
-msgstr ""
-
-#: ../lib/curtail_rb/window.rb:710
-msgctxt "shortcuts dialog"
-msgid "Quit"
-msgstr ""
-
-#: ../lib/curtail_rb/window.rb:718
-msgctxt "shortcuts dialog"
-msgid "General"
-msgstr ""
-
-#: ../lib/curtail_rb/window.rb:736
+#: ../lib/curtail_rb/window.rb:690
 msgid "translator-credits"
 msgstr ""
 
-#: ../lib/curtail_rb/window.rb:759
+#: ../lib/curtail_rb/window.rb:713
 msgid "Contributors"
 msgstr ""

@@ -6,5 +6,6 @@ lib/curtail_rb/compressor.rb
 lib/curtail_rb/preferences_dialog.rb
 lib/curtail_rb/result_item_manager.rb
 lib/curtail_rb/result_item_row.rb
+lib/curtail_rb/shortcuts_dialog.rb
 lib/curtail_rb/tools.rb
 lib/curtail_rb/window.rb

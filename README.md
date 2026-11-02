@@ -46,6 +46,7 @@ work of upstream's translators and are carried over unchanged.
 | `lib/curtail_rb/application.rb` | `Gtk::Application`, activate and open handlers |
 | `lib/curtail_rb/window.rb` | the main window: header bar, banner, home/loading/results views |
 | `lib/curtail_rb/preferences_dialog.rb` | the two-page preferences sheet |
+| `lib/curtail_rb/shortcuts_dialog.rb` | the keyboard-shortcuts dialog |
 | `lib/curtail_rb/result_item.rb` | one row's state |
 | `lib/curtail_rb/result_item_manager.rb` | Gio::File → ResultItem, destination and temp paths |
 | `lib/curtail_rb/result_item_row.rb` | the row widget |

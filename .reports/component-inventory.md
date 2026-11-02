@@ -18,7 +18,7 @@ below are the union of each pair.
 | `src/window.py` (`on_results_right_click`) | `lib/curtail_rb/window.rb` (`context_menu`) | context menu | yes |
 | `src/window.py` (`_create_warning_dialog`) | `lib/curtail_rb/window.rb` (`warning_dialog`) | dialog | yes |
 | `src/window.py` (`on_about`) | `lib/curtail_rb/window.rb` (`about_dialog`) | dialog | yes |
-| `data/ui/shortcuts-dialog.blp` | `lib/curtail_rb/window.rb` (`shortcuts_dialog`) | dialog | yes (not its own file) |
+| `data/ui/shortcuts-dialog.blp` | `lib/curtail_rb/shortcuts_dialog.rb` | dialog | yes |
 | `data/ui/preferences.blp` + `src/preferences.py` | `lib/curtail_rb/preferences_dialog.rb` | dialog | yes |
 | `data/ui/result-item-row.blp` + `src/result_item_row.py` | `lib/curtail_rb/result_item_row.rb` | row | yes |
 | `src/result_item.py` | `lib/curtail_rb/result_item.rb` | model | yes |
@@ -95,7 +95,7 @@ Actions and accelerators installed on the window:
 Error states: a per-item error (unsupported format, missing file) surfaces on
 the row, not as a dialog; an empty selection surfaces as the toast.
 
-## data/ui/shortcuts-dialog.blp → lib/curtail_rb/window.rb — the shortcuts dialog
+## data/ui/shortcuts-dialog.blp → lib/curtail_rb/shortcuts_dialog.rb — the shortcuts dialog
 
 A standalone blueprint object with no backing Python file.
 
@@ -157,17 +157,24 @@ on a Ruby-side model.
    installs it, so the item is dead on upstream. The port installs it as
    `win.shortcuts` — a deliberate divergence, and the port's shortcuts item
    labels must still read as upstream's do.
-2. **The shortcuts dialog has no file of its own.** It is a standalone
+2. **The shortcuts dialog now has its own file.** It is a standalone
    blueprint with no backing source file, which the house rule makes its own
-   unit; it currently lives inside `window.rb`. Candidate split:
-   `lib/curtail_rb/shortcuts_dialog.rb`, and likewise `about_dialog.rb`.
-3. **Stale scaffold.** `lib/curtail.rb`, `lib/curtail/application.rb` and
-   `exe/curtail` are the kettle-jem packaging stub — a status page saying the
-   port is unwritten. They shadow the real app (`lib/curtail_rb.rb`,
-   `exe/curtail-rb`) and should go.
+   unit, so it moved to `lib/curtail_rb/shortcuts_dialog.rb`; `window.rb`
+   keeps `shortcuts_dialog`, `shortcuts_section` and `shortcuts_items` as
+   one-line delegations. The about dialog stays in `window.rb`, because
+   upstream builds it in `src/window.py` and has no separate file for it.
+3. **Stale scaffold — removed.** `lib/curtail.rb`,
+   `lib/curtail/application.rb` and `exe/curtail` were the kettle-jem
+   packaging stub, a status page saying the port was unwritten, and they
+   shadowed the real app. They are gone; `lib/curtail/rb.rb` is now the gem's
+   namespace entry (the one `spec/spec_helper.rb` requires) and
+   `bin/curtail-rb` the development launcher the README and the devshell
+   banner name.
 4. **GResource and the icons.** Upstream ships `x-circular-symbolic` and
    `info-outline-symbolic` through GResource; the port loads them from
    `Paths.icon_dir`, and both SVGs are present under
    `data/icons/scalable/actions/`. No gap.
 5. **`po/POTFILES.in` omits `lib/curtail_rb/compression_manager.rb`** and the
    data files; worth confirming against the catalogue in the translation step.
+   `lib/curtail_rb/shortcuts_dialog.rb` is listed, and `po/curtail.pot` is
+   regenerated against it — the msgid set is unchanged by the split.

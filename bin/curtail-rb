@@ -1,0 +1,5 @@
+#!/bin/sh
+# The development launcher, which is what the devshell banner and the README
+# point at. The packaged executable is exe/curtail-rb; this runs it straight
+# from the checkout, with any image paths passed through.
+exec "$(dirname "$0")/../exe/curtail-rb" "$@"

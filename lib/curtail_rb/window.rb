@@ -6,6 +6,7 @@ require_relative 'paths'
 require_relative 'preferences_dialog'
 require_relative 'result_item_manager'
 require_relative 'result_item_row'
+require_relative 'shortcuts_dialog'
 require_relative 'tools'
 
 module CurtailRb
@@ -155,7 +156,6 @@ module CurtailRb
         warning_banner.revealed = show
       end
     end
-
 
     def saving_subtitle(new_file)
       case new_file
@@ -479,7 +479,7 @@ module CurtailRb
     end
 
     def on_shortcuts
-      shortcuts_dialog.present(window)
+      shortcuts.present(window)
     end
 
     def on_about
@@ -662,62 +662,16 @@ module CurtailRb
       end
     end
 
-    # Upstream marks these with C_("shortcuts dialog", ...), so they are
-    # looked up in that context rather than as plain messages.
-    def shortcuts_dialog
-      @shortcuts_dialog ||= Adwaita::ShortcutsDialog.new.tap do |dialog|
-        dialog.add(shortcuts_section)
-
-        shortcuts_section.tap do |section|
-          shortcuts_items.each_value { |item| section.add(item) }
-        end
-      end
+    # Built on first use rather than in `build`, because the items read their
+    # accelerators off the application and `create_actions` has to have
+    # registered them first.
+    def shortcuts
+      @shortcuts ||= ShortcutsDialog.new(@app).tap(&:build)
     end
 
-    # Two things to work around. The two-argument constructor has two utf8
-    # overloads — (title, accelerator) and (title, action_name) — and
-    # introspection picks the accelerator one, so the action name goes in as a
-    # property instead. And the badge that should resolve from the action's
-    # accelerator comes out blank, so the accelerator is filled in explicitly
-    # from the same place the action would have read it.
-    def shortcuts_item(title, action_name)
-      Adwaita::ShortcutsItem.new(title, '').tap do |item|
-        item.action_name = action_name
-        item.accelerator = @app.get_accels_for_action(action_name).first.to_s
-      end
-    end
-
-    # Keyed by action name so a test can ask what a given shortcut renders.
-    # Spelled out rather than looped over a table because rxgettext has no
-    # mark-only form of p_ — the context and the message both have to be
-    # literals at the call site to reach the template, which is also how
-    # upstream's blueprint lists them.
-    def shortcuts_items
-      @shortcuts_items ||= {
-        'win.select-file' => shortcuts_item(
-          p_('shortcuts dialog', 'Select File'),
-          'win.select-file',
-        ),
-        'win.preferences' => shortcuts_item(
-          p_('shortcuts dialog', 'Preferences'),
-          'win.preferences',
-        ),
-        'win.shortcuts'   => shortcuts_item(
-          p_('shortcuts dialog', 'Keyboard Shortcuts'),
-          'win.shortcuts',
-        ),
-        'win.quit'        => shortcuts_item(
-          p_('shortcuts dialog', 'Quit'),
-          'win.quit',
-        ),
-      }
-    end
-
-    def shortcuts_section
-      @shortcuts_section ||= Adwaita::ShortcutsSection.new.tap do |section|
-        section.title = p_('shortcuts dialog', 'General')
-      end
-    end
+    def shortcuts_dialog = shortcuts.dialog
+    def shortcuts_section = shortcuts.section
+    def shortcuts_items = shortcuts.items
 
     CONTRIBUTORS = [
       'Steven Teskey',
