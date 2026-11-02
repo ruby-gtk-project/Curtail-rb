@@ -215,6 +215,16 @@
             pkgs.pkg-config
             pkgs.glib.dev
             pkgs.gettext
+            # rxgettext, the extractor `rake pot` drives. GNU xgettext claims
+            # to support Ruby but only shells out to this, so without it
+            # `xgettext --language=Ruby` fails.
+            pkgs.rubyPackages_3_4.gettext
+            # The spec runner. The suite is plain RSpec, so this is enough.
+            pkgs.rubyPackages_3_4.rspec
+            # This machine may have no display server at all, so the shell
+            # carries one it can start itself: `xvfb-run ruby exe/<app>` both
+            # launches the app and is how test/drive_*.rb is run.
+            pkgs.xvfb-run
             pkgs.adwaita-icon-theme
             pkgs.gsettings-desktop-schemas
           ] ++ gtkStack ++ compressionTools;
@@ -224,6 +234,7 @@
           # Gio::Settings cannot find Curtail's own schema.
           shellHook = ''
             export GI_TYPELIB_PATH="${typelibPath}"
+            export RUBYLIB="$PWD/lib''${RUBYLIB:+:$RUBYLIB}"
             export GDK_PIXBUF_MODULE_FILE="${pixbufLoaders}/loaders.cache"
             export XDG_DATA_DIRS="$PWD/tmp/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk4}/share/gsettings-schemas/${pkgs.gtk4.name}:${pkgs.adwaita-icon-theme}/share:$XDG_DATA_DIRS"
             unset BUNDLE_GEMFILE BUNDLE_FROZEN BUNDLE_PATH
