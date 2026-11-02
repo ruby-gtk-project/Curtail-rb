@@ -25,7 +25,11 @@ below are the union of each pair.
 | `src/result_item_manager.py` | `lib/curtail_rb/result_item_manager.rb` | model | yes |
 | `src/settings_manager.py` + `data/…gschema.xml` | `lib/curtail_rb/settings.rb` + `data/com.github.huluti.Curtail.Rb.gschema.xml` | settings | yes |
 | `src/compression_manager.py` | `lib/curtail_rb/compression_manager.rb` | support | yes |
-| `src/compressor.py` + `src/compressors/{png,jpeg,webp,svg}_compressor.py` | `lib/curtail_rb/compressor.rb` | support | yes (5 files folded into 1) |
+| `src/compressor.py` | `lib/curtail_rb/compressor.rb` | support | yes |
+| `src/compressors/png_compressor.py` | `lib/curtail_rb/compressors/png_compressor.rb` | support | yes |
+| `src/compressors/jpeg_compressor.py` | `lib/curtail_rb/compressors/jpeg_compressor.rb` | support | yes |
+| `src/compressors/webp_compressor.py` | `lib/curtail_rb/compressors/webp_compressor.rb` | support | yes |
+| `src/compressors/svg_compressor.py` | `lib/curtail_rb/compressors/svg_compressor.rb` | support | yes |
 | `src/tools.py` | `lib/curtail_rb/tools.rb` | support | yes |
 | `po/*` (40 locales, `po/POTFILES.in`) | `po/*` + `lib/curtail_rb/i18n.rb` | i18n | yes |
 | `data/curtail.gresource.xml` | — (no GResource in the port; widgets are built in Ruby) | resource | n/a |
@@ -146,8 +150,18 @@ on a Ruby-side model.
 - `src/result_item.py` → `lib/curtail_rb/result_item.rb` — 16 fields, `set_error`.
 - `src/result_item_manager.py` → `lib/curtail_rb/result_item_manager.rb` — 4 allowed mime types, portal host-path lookup, suffix/prefix naming, tmp path, the two error strings.
 - `src/settings_manager.py` → `lib/curtail_rb/settings.rb` — 15 GSettings keys.
-- `src/compression_manager.py` → `lib/curtail_rb/compression_manager.rb` — one worker per core (`Etc.nprocessors`, matching upstream's `os.cpu_count()`), results marshalled back on the main loop.
-- `src/compressor.py` + `src/compressors/*.py` → `lib/curtail_rb/compressor.rb` — pngquant/oxipng, jpegoptim, cwebp, scour.
+- `src/compression_manager.py` → `lib/curtail_rb/compression_manager.rb` — the
+  `compressors` registry keyed by file type, `mime_type_to_compressor_type`,
+  and one worker per core (`Etc.nprocessors`, matching upstream's
+  `os.cpu_count()`). Each compressor marshals its own item back on the main
+  loop; the manager marshals only the final "compression enabled again".
+- `src/compressor.py` → `lib/curtail_rb/compressor.rb` — the base class: spawn
+  the shell line, enforce `compression-timeout` by killing the child, then
+  adopt the temp file only when it came out smaller.
+- `src/compressors/{png,jpeg,webp,svg}_compressor.py` →
+  `lib/curtail_rb/compressors/*.rb` — one subclass each, supplying
+  `self.file_type` and `#build_command`: pngquant/oxipng, jpegoptim, cwebp,
+  scour. `Window::COMPRESSORS` registers the four, as upstream's window does.
 - `src/tools.py` → `lib/curtail_rb/tools.rb` — file filters, thumbnail, folder walk (flat and recursive), `debug_infos`.
 
 ## Open items
@@ -163,18 +177,26 @@ on a Ruby-side model.
    keeps `shortcuts_dialog`, `shortcuts_section` and `shortcuts_items` as
    one-line delegations. The about dialog stays in `window.rb`, because
    upstream builds it in `src/window.py` and has no separate file for it.
-3. **Stale scaffold — removed.** `lib/curtail.rb`,
+3. **The compressors are four files again.** They were folded into
+   `compressor.rb` as four command-builder methods with the dispatch done on
+   mime type inside the module. That broke the one-upstream-file-one-port-file
+   rule and moved upstream's registry out of the manager, so `compressor.rb`
+   is now the base class, `lib/curtail_rb/compressors/` holds the four
+   subclasses, and `CompressionManager` carries `compressors`,
+   `register_compressor` and `mime_type_to_compressor_type` as upstream does.
+   Only `compressor.rb` holds msgids, so `po/POTFILES.in` is unchanged.
+4. **Stale scaffold — removed.** `lib/curtail.rb`,
    `lib/curtail/application.rb` and `exe/curtail` were the kettle-jem
    packaging stub, a status page saying the port was unwritten, and they
    shadowed the real app. They are gone; `lib/curtail/rb.rb` is now the gem's
    namespace entry (the one `spec/spec_helper.rb` requires) and
    `bin/curtail-rb` the development launcher the README and the devshell
    banner name.
-4. **GResource and the icons.** Upstream ships `x-circular-symbolic` and
+5. **GResource and the icons.** Upstream ships `x-circular-symbolic` and
    `info-outline-symbolic` through GResource; the port loads them from
    `Paths.icon_dir`, and both SVGs are present under
    `data/icons/scalable/actions/`. No gap.
-5. **`po/POTFILES.in` omits `lib/curtail_rb/compression_manager.rb`** and the
+6. **`po/POTFILES.in` omits `lib/curtail_rb/compression_manager.rb`** and the
    data files; worth confirming against the catalogue in the translation step.
    `lib/curtail_rb/shortcuts_dialog.rb` is listed, and `po/curtail.pot` is
    regenerated against it — the msgid set is unchanged by the split.

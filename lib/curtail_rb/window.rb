@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require_relative 'compression_manager'
+require_relative 'compressors/jpeg_compressor'
+require_relative 'compressors/png_compressor'
+require_relative 'compressors/svg_compressor'
+require_relative 'compressors/webp_compressor'
 require_relative 'i18n'
 require_relative 'paths'
 require_relative 'preferences_dialog'
@@ -35,12 +39,22 @@ module CurtailRb
     # what the list is showing without reaching through the ListBox.
     attr_reader :rows
 
+    # Upstream's window registers the four concrete compressors with the
+    # manager; nothing else knows the set.
+    COMPRESSORS = [
+      Compressors::PngCompressor,
+      Compressors::JpegCompressor,
+      Compressors::WebpCompressor,
+      Compressors::SvgCompressor,
+    ].freeze
+
     def initialize(app, settings)
       @app = app
       @settings = settings
       @rows = []
       @prefs_dialog = nil
       @manager = CompressionManager.new(settings)
+      COMPRESSORS.each { |klass| @manager.register_compressor(klass) }
       @result_item_manager = ResultItemManager.new(settings)
     end
 

@@ -178,9 +178,10 @@ GtkDriver.drive(CurtailRb::Application.new, shots: 'tmp/shots') do |d, app|
     end
 
     d.check('the timeout message substitutes after looking up') do
-      CurtailRb::Compressor.timeout_message(7).then do |message|
-        message.include?('7') && !message.include?('{}')
-      end
+      CurtailRb::Compressors::PngCompressor
+        .new(Struct.new(:compression_timeout).new(7))
+        .send(:timeout_message)
+        .then { |message| message.include?('7') && !message.include?('{}') }
     end
   end
 end

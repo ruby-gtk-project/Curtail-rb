@@ -94,9 +94,44 @@ class NewFilenameTest < Minitest::Test
   end
 end
 
+# A manager with the four concrete compressors registered, which is the only
+# place that knows the mime type to compressor mapping.
+def manager_for(settings)
+  CurtailRb::CompressionManager.new(settings).tap do |manager|
+    CurtailRb::Window::COMPRESSORS.each do |klass|
+      manager.register_compressor(klass)
+    end
+  end
+end
+
+def compressor_for(settings, mime)
+  manager_for(settings).then do |manager|
+    manager.compressors.fetch(manager.mime_type_to_compressor_type(mime))
+  end
+end
+
 class CommandTest < Minitest::Test
   def command(settings, **kwargs)
-    CurtailRb::Compressor.build_command(item(**kwargs), settings)
+    item(**kwargs).then do |result|
+      compressor_for(settings, result.mime_type).build_command(result)
+    end
+  end
+
+  def test_every_allowed_mime_type_has_a_registered_compressor
+    CurtailRb::ResultItemManager::ALLOWED_MIME_TYPES.each do |mime|
+      assert_kind_of CurtailRb::Compressor,
+        compressor_for(FakeSettings.new, mime)
+    end
+  end
+
+  def test_registering_the_same_class_twice_keeps_one_instance
+    manager_for(FakeSettings.new).then do |manager|
+      manager.compressors['png'].then do |first|
+        manager.register_compressor(CurtailRb::Compressors::PngCompressor)
+
+        assert_same first, manager.compressors['png']
+      end
+    end
   end
 
   def test_png_lossless_is_oxipng_alone
@@ -204,12 +239,19 @@ class CommandTest < Minitest::Test
 end
 
 class ExecuteTest < Minitest::Test
+  # `execute` is the port's own split out of upstream's `run`, so it is
+  # private; the shell behaviour it carries is worth testing on its own.
+  def execute(command, settings)
+    CurtailRb::Compressors::PngCompressor.new(settings)
+      .send(:execute, command)
+  end
+
   def test_success_reports_nothing
-    assert_nil CurtailRb::Compressor.execute('true', FakeSettings.new)
+    assert_nil execute('true', FakeSettings.new)
   end
 
   def test_failure_reports_the_output
-    CurtailRb::Compressor.execute('echo boom >&2; false', FakeSettings.new)
+    execute('echo boom >&2; false', FakeSettings.new)
       .then do |message, details|
         assert_equal 'An unknown error has occurred.', message
         assert_includes details, 'boom'
@@ -220,8 +262,7 @@ class ExecuteTest < Minitest::Test
   def test_a_hung_command_times_out_and_is_killed
     started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-    CurtailRb::Compressor
-      .execute('sleep 30', FakeSettings.new(compression_timeout: 1))
+    execute('sleep 30', FakeSettings.new(compression_timeout: 1))
       .then do |message, details|
         assert_includes message, 'timeout of 1 seconds'
         assert_nil details
@@ -232,10 +273,7 @@ class ExecuteTest < Minitest::Test
   end
 
   def test_details_are_escaped_for_the_markup_popover
-    CurtailRb::Compressor.execute(
-      'echo "<b>&</b>" >&2; false',
-      FakeSettings.new,
-    )
+    execute('echo "<b>&</b>" >&2; false', FakeSettings.new)
       .then do |_message, details|
         assert_includes details, '&lt;b&gt;'
         assert_includes details, '&amp;'
