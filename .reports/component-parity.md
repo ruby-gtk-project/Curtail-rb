@@ -4,7 +4,7 @@
 |---|---|
 | Upstream | `origin/main` @ `1536d90` |
 | Port | `ruby` (this audit) |
-| Units with parity | 6 / 6 UI units. Last round's file-level translation gap is closed (see re-audit note); a *different*, newly found devshell/entry-point gap sits outside any widget unit this round — see `.reports/test-parity.md` |
+| Units with parity | 6 / 6 UI units. Last round's file-level translation gap and its bare-`rake` devshell gap are both now closed; a narrower doc-accuracy gap in the same devshell area persists outside any widget unit — see `.reports/test-parity.md` |
 
 Each unit below was checked on all four axes (count, style, behaviour, text),
 plus the two axes `component-parity` adds beyond the scan: CSS rules actually
@@ -129,14 +129,18 @@ localized `Name[xx]=`/`Comment[xx]=` desktop entries and
 `xml:lang` occurrences). Full detail in `.reports/translation-parity.md`.
 That gap is closed and no longer sits outside the six units.
 
-A different, unrelated gap sits outside all six widget units, found fresh
-in this round: the documented single entry point for the whole suite,
-bare `rake`, does not run the test and lint tasks it is advertised to run.
-See `.reports/test-parity.md` and `.reports/accountability-ensurance.md`
-for the detail — it is not a widget-level finding, so it does not change
-any verdict above, but it means this file's "6/6 with no other gap" from
-last round would have been wrong to repeat verbatim without naming the
-new one.
+A different, unrelated gap this file's last round found outside all six
+widget units — bare `rake` not running the test and lint tasks it is
+advertised to run — is now fixed (commit `f5d2338`, made after that round
+and re-verified fresh in this round; see `.reports/test-parity.md`). A
+narrower gap in the same area persists: `CLAUDE.md`/`AGENTS.md` still say
+bare `rake` runs "units, UI drives, locale drives, catalogues, rubocop",
+and it still only reaches `test` (schema + mo + units) and `lint`, never
+`drive` or `i18n`. Like its predecessor, this is a devshell/doc-level
+finding, not a widget-level one, so it does not change any verdict above —
+but it means this file's "6/6, no other gap" would again be wrong to
+repeat verbatim without naming it. Full detail in `.reports/test-parity.md`
+and `.reports/accountability-ensurance.md`.
 
 ## Rules followed
 

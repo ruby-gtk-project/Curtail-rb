@@ -7,7 +7,7 @@
 | Upstream tests | 0 |
 | Ported | 0 |
 | Gaps (0/0 parity itself) | 0 |
-| New finding this round | the documented single entry point, bare `rake`, is a no-op |
+| New finding this round | the previous round's "bare `rake` is a no-op" and "`rake lint` fails" gaps are now fixed (commit `f5d2338`) — but the fix is narrower than the docs it was meant to make true: bare `rake` still does not run UI drives or locale drives, though `CLAUDE.md`/`AGENTS.md` still say it does |
 
 ## Upstream has no test suite
 
@@ -23,6 +23,84 @@ Verified directly on an `origin/main` worktree:
 Parity is 0/0 and is met trivially. **The port therefore inherits no safety
 net from upstream** — every check the port runs was written for the port and
 pins nothing upstream itself considered worth pinning down.
+
+## Re-audit of this round: the previously-reported `rake`/`rake lint` gap is now closed
+
+This file previously (as committed at `182dbf6`) reported two live gaps:
+bare `rake` being a no-op (`task :default do puts "Default task complete."
+end`, zero prerequisites) and `rake lint` failing with 99 rubocop offenses.
+Commit `f5d2338` ("Make bare `rake` run test+lint and fix `rake lint` to
+exit clean"), made on this branch after that report was written and before
+this round's audit, addresses both. Re-verified directly in this round,
+not from the commit message:
+
+```
+$ nix develop --command rake -P
+rake default
+    test
+    lint
+```
+
+```
+$ nix develop --command xvfb-run -a rake
+...
+44 runs, 307 assertions, 0 failures, 0 errors, 0 skips
+rubocop
+Inspecting 44 files
+............................................
+44 files inspected, no offenses detected
+```
+
+Bare `rake` now runs the Minitest suite and rubocop and exits 0 on a clean
+tree, and `rake lint` run by its full name also exits 0 (the fix excludes
+`gemfiles/**` and `spec/spec_helper.rb` — kettle-jem scaffolding, not
+`lib/`/`exe/` — in `.rubocop.yml`, matching the pattern of the other
+vendored excludes already there, rather than suppressing the app's own
+offenses). **Both halves of the previous round's finding are closed.**
+
+## New finding this round: bare `rake`'s fix is narrower than what it is still documented to do
+
+`CLAUDE.md`/`AGENTS.md` (unchanged by `f5d2338`) still say:
+
+```
+rake                      # units, UI drives, locale drives, catalogues, rubocop
+```
+
+i.e. five things. `rake -P` (above) shows `default` depends on exactly
+`test` and `lint` — and `test` itself (`Rakefile:215`,
+`Rake::TestTask.new(test: [:schema, :mo])`) depends on `schema` and `mo`
+only:
+
+```
+rake test
+    schema
+    mo
+```
+
+`rake drive` (headless UI drives) and `rake i18n` (locale drives) are
+**not** transitive dependencies of `default` or `test` anywhere in the
+Rakefile — confirmed with `rake -P` showing `rake drive` and `rake i18n` as
+their own independent root tasks, and with `grep -n enhance Rakefile`
+finding no further enhancement of `:default` anywhere. Running bare `rake`
+(reproduced above) compiles the schema and the `.mo` catalogues, runs the
+44 Minitest methods, and runs rubocop — it does not open the app, drive
+any UI, take any screenshot, or exercise any of the four non-English
+locales. `rake pot`/`rake po`/`rake merge`/`rake merge_data` (catalogue
+*regeneration* and *merge*, as opposed to the `mo` *compile* step `test`
+already pulls in) are likewise independent tasks bare `rake` never
+reaches.
+
+So the five-item claim ("units, UI drives, locale drives, catalogues,
+rubocop") is now 2.5/5 true of the bare command: units — yes; rubocop —
+yes; catalogues — partially (`mo` compile only, not `pot`/`po`/`merge`);
+UI drives — no; locale drives — no. This is a smaller instance of exactly
+the pattern the previous round found (a doc/banner claim about what bare
+`rake` does, not checked against what it actually does after the fix that
+was supposed to settle it) — the fix closed the "runs nothing" gap without
+closing the "runs everything documented" gap. The 128-check drive-suite
+figure below is real, and is independently reproduced by this audit, but
+it is **not** produced by the command the project's own docs tell a person
+to run.
 
 ## The binstub/Bundler defect a previous round of this audit found: now fixed
 
@@ -54,100 +132,25 @@ rake build  ...
 earlier finding is resolved and this round confirms it by direct
 reproduction, not by trusting the commit message.
 
-## New finding this round: bare `rake` does not do what it is advertised to do
+## Historical: the state as of the previous round (`182dbf6`), now superseded
 
-The devshell banner (printed by `nix develop` itself, reproduced above)
-says `rake    test + lint`. `CLAUDE.md`/`AGENTS.md` on this branch says:
-
-> `rake    # units, UI drives, locale drives, catalogues, rubocop`
-
-Both describe the **bare, no-argument** `rake` invocation. Reading
-`Rakefile:61-65`:
-
-```ruby
-# Define a base default task early so other files can enhance it.
-desc "Default tasks aggregator"
-task :default do
-  puts "Default task complete."
-end
-```
-
-Nothing in the rest of the 343-line `Rakefile` adds a prerequisite to
-`:default` (confirmed with `grep -ni default Rakefile` — the only other two
-hits are the comment line and the `rake -T` doc-comment above the method
-table; no `Rake::Task[:default].enhance`, no `task default: [...]`
-anywhere). Loading the Rakefile and inspecting the task object directly
-confirms this is not a doc-comment slip:
-
-```
-$ nix develop --command ruby -e '
-    require "rake"; load "Rakefile"
-    puts Rake::Task[:default].prerequisites.inspect
-    puts Rake::Task[:default].actions.length'
-[]
-1
-```
-
-Running it bears this out — bare `rake` prints one line and exits,
-regardless of test or lint state:
-
-```
-$ nix develop --command xvfb-run -a rake
-...
-NOTE: kettle-dev isn't installed, or is disabled for 3.3.10 in the current environment
-Default task complete.
-```
-
-The "NOTE: kettle-dev isn't installed" line is the tell: the comment
-("Define a base default task early so other files can enhance it") expects
-the `kettle-dev` gem to wire `test`/`lint` onto `:default` once it loads,
-and in this devshell it does not load, so the enhancement never happens and
-the stub is all that is left. **This means the one command the devshell
-banner and the project's own `CLAUDE.md`/`AGENTS.md` tell a person to run
-for "test + lint" runs neither.** A person (or an agent) who trusts the
-banner and runs bare `rake` gets a false "complete" with zero checks
-executed, and would have no reason to suspect anything is wrong — there is
-no error, no missing-coverage warning, just a one-line success message.
-
-## `rake lint` itself currently fails — outside `lib/`, but a real failure
-
-`rake test` runs clean through the documented command now (see below), but
-`rake lint` (`sh 'rubocop'`, scanning the whole repo tree — `.rubocop.yml`
-excludes `tmp/**/*`, `pkg/**/*`, `vendor/**/*` etc. but not `gemfiles/` or
-`spec/`) currently exits 1:
-
-```
-$ nix develop --command rake lint
-...
-87 files inspected, 99 offenses detected, 90 offenses autocorrectable
-rake aborted!
-Command failed with status (1): [rubocop]
-```
-
-Narrowed down: **every one of the 99 offenses is in `gemfiles/**` and
-`spec/spec_helper.rb`** — gem-packaging scaffolding from the `kettle-jem`
-template (predates the binstub fix; `git log -- spec/spec_helper.rb` shows
-it landed in commit `90ed0cd`, well before `f6a417d`'s "all run clean"
-claim), not in the ported app:
-
-```
-$ nix develop --command rubocop lib/ exe/
-Inspecting 21 files
-.....................
-21 files inspected, no offenses detected
-```
-
-So the port's own code (`lib/`, `exe/`) is rubocop-clean, but `rake lint`
-— the task the banner says bare `rake` runs — fails today. Commit
-`f6a417d`'s message asserts "`rake schema/test/po/pot/lint/drive/i18n` and
-`rake` all run clean"; `rake lint` does not, right now, on this tree, and
-`rake` (bare) never even gets to try.
+The previous round's report, verbatim at that point in time, found bare
+`rake` printing `Default task complete.` and exiting having run nothing
+(`task :default do puts ... end`, zero prerequisites — `Rake::Task[:default]
+.prerequisites` was `[]`), and `rake lint` failing with 87 files inspected,
+99 offenses, all in `gemfiles/**`/`spec/spec_helper.rb`. **Both are fixed as
+of commit `f5d2338`**, re-verified above in this round's own section, not
+carried forward from that commit's message. This subsection is kept only so
+the "false green → fix → re-check" history is visible in one file; it is
+not this round's live finding (that is the "narrower than documented"
+finding above).
 
 ## What actually runs, and what it proves
 
 Invoked exactly as the devshell/`AGENTS.md` instruct — `nix develop
 --command xvfb-run -a <command>` — using the explicit per-task commands
-(`rake test`, `rake drive`, `rake i18n`) since bare `rake` is a no-op:
+(`rake test`, `rake drive`, `rake i18n`) since bare `rake` does not reach
+`drive` or `i18n` (see above):
 
 ```sh
 nix develop --command xvfb-run -a rake test
@@ -167,14 +170,31 @@ Results, reproduced independently in this audit:
 | `rake drive` → `test/drive_i18n.rb` | 25 of 25 checks passed, `DRIVE OK` |
 
 5 + 34 + 41 + 23 + 25 = **128 checks**, matching the runtime gate figure this
-round (`drive_ok=true, 128 checks passed, 0 failed`, 7 components). That
-figure is real and was independently reproduced in this audit via `rake
-drive` directly (now that the binstub is fixed) — but it is **not** what a
-person gets by running the one command the banner tells them to run. The
-runtime gate passing is evidence about `rake drive`/`rake test`; it says
-nothing about bare `rake`, and nothing in the gate's own numbers would
-surface that bare `rake` (and therefore the documented default workflow) is
-a no-op.
+round (`drive_ok=true, 128 checks passed, 0 failed`, stated this round as
+covering 9 components). That figure is real and was independently
+reproduced in this audit via `rake drive`/`rake i18n` directly. Counting
+the port's own logical components — window, result-item row, preferences
+dialog, shortcuts dialog, application, the compressor pipeline
+(`Compressor` + 4 format subclasses), compression manager, result-item
+manager, and settings (9 in total, matching the gate) — every one of them
+is exercised by at least one of the five drive scripts or by
+`units_test.rb` (settings accessors, compressor command construction,
+result-item-manager naming/mime logic are unit-tested directly; window,
+dialogs, preferences, shortcuts and the live compression pipeline are
+drive-tested). None of the 9 is a component the check count merely
+"covers" on paper without a check actually touching it. (A previous round
+of this same report cited "7 components" for the identical 128/0 figure;
+this round could not find a basis for either number inside the repo itself
+— no file in this tree uses the word "component" — so both are read as the
+external harness's own count, re-derived here independently against the
+9 logical units above rather than carried forward unchecked.)
+
+That figure is **not**, however, what a person gets by running the one
+command the banner and `CLAUDE.md`/`AGENTS.md` tell them to run for
+"UI drives, locale drives" — see the finding above. The runtime gate
+passing is evidence about `rake drive`/`rake i18n`/`rake test` invoked by
+full name; it says nothing about bare `rake`, which does not reach either
+drive task.
 
 ## Extra (not part of any upstream count, since upstream has none)
 
@@ -202,11 +222,16 @@ a no-op.
 - The "128 checks" figure is reported with the exact command used to
   reproduce it, not as a bare adjective, and is explicitly distinguished
   from what bare `rake` produces.
-- The previously reported binstub defect was re-verified rather than
-  assumed fixed on the strength of the commit message that claimed to fix
-  it — and that same commit's "all run clean" claim is checked line by
-  line, finding one part true (`rake test`/`rake drive`/`rake schema`) and
-  one part still false (`rake lint`, and bare `rake` never reaching either).
-- A narrow, reproducible scope (`rubocop lib/ exe/`) is used to separate the
-  port's own code quality (clean) from the scaffold files failing lint
-  (not clean), so the finding is not overstated into "the port fails lint."
+- The previously reported binstub defect and the previous round's bare-`rake`/
+  `rake lint` findings were re-verified directly (`rake -P`, a fresh `rake`
+  and `rake lint` run) rather than assumed fixed on the strength of the fix
+  commit's own message.
+- The fix commit (`f5d2338`) is itself checked against the docs it was
+  meant to make true, rather than treated as the end of the story: it is
+  confirmed fixed where it says it fixed something, and a narrower,
+  still-live gap (bare `rake` vs. the five-item doc claim) is reported
+  separately rather than folded into either "still broken" or "fully
+  fixed."
+- The "9 components" figure in this round's gate is reconciled against the
+  port's own logical units rather than repeated verbatim; the previous
+  round's differing "7" is named but not silently carried forward.
