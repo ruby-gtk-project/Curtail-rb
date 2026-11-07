@@ -26,6 +26,8 @@ AllCops:
     - reference/**/*
     - references/**/*   # vendored upstream checkouts, with configs of their own
     - pkg/**/*
+    - gemfiles/**/*      # kettle-jem gem-template scaffolding, not app code
+    - spec/spec_helper.rb # kettle-jem gem-template scaffolding, not app code
 
 # Bans `lvar = begin ... end`. Force
 #   begin

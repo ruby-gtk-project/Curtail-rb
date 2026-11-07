@@ -55,14 +55,14 @@
 #
 
 # simplecov:disable
-require "bundler/gem_tasks" if !Dir[File.join(__dir__, "*.gemspec")].empty?
+if !Dir[File.join(__dir__, "*.gemspec")].empty?
+  require "bundler/gem_tasks"
+end
 # simplecov:enable
 
 # Define a base default task early so other files can enhance it.
 desc "Default tasks aggregator"
-task :default do
-  puts "Default task complete."
-end
+task default: [:test, :lint]
 
 # Without this, a generated docs/ directory makes Rake resolve the bare
 # name `docs` as an up-to-date file task, so `rake docs` exits 0 having
@@ -74,14 +74,26 @@ task docs: "yard"
 ### MONOREPO FAMILY TASKS
 if Dir.exist?(File.join(__dir__, "gems"))
   def family_gem_dirs
-    Dir.glob(File.join(__dir__, "gems", "*", "*.gemspec"))
+    Dir.glob(
+      File.join(
+        __dir__,
+        "gems",
+        "*",
+        "*.gemspec",
+      ),
+    )
       .map { |path| File.dirname(path) }
       .uniq
       .sort_by { |path| File.basename(path) }
   end
 
   def run_kettle_family(*args)
-    sh("bundle", "exec", "kettle-family", *args)
+    sh(
+      "bundle",
+      "exec",
+      "kettle-family",
+      *args,
+    )
   end
 
   namespace :family do
@@ -131,7 +143,9 @@ end
 # External gems that define tasks - add here!
 begin
   require "kettle/dev"
-  Kettle::Dev.install_tasks unless Kettle::Dev::RUNNING_AS == "rake"
+  unless Kettle::Dev::RUNNING_AS == "rake"
+    Kettle::Dev.install_tasks
+  end
 rescue LoadError
   warn("NOTE: kettle-dev isn't installed, or is disabled for #{RUBY_VERSION} in the current environment")
 end
