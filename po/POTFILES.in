@@ -1,7 +1,14 @@
-# The Ruby sources, which is where every string the app renders lives. The
-# data files (.desktop, .metainfo, .gschema) carry a handful of strings too,
-# but xgettext needs a separate pass per format for those; their entries are
-# already in the catalogues and change about once a release.
+# The Ruby sources, which is where most of the strings the app renders
+# live. The three data files below carry translatable strings too — the
+# desktop entry's Name/Comment/Keywords, every GSettings key's summary and
+# description, and the AppStream metainfo's summary and description — and
+# `rake pot` extracts them as well, through po/extract_data_strings.rb
+# rather than rxgettext: rxgettext only understands Ruby, and xgettext
+# itself needs a different frontend per format for these (intltool-extract,
+# itstool), neither of which ships as a Ruby-reachable gem here.
+data/com.github.huluti.Curtail.Rb.desktop
+data/com.github.huluti.Curtail.Rb.gschema.xml
+data/com.github.huluti.Curtail.Rb.metainfo.xml
 lib/curtail_rb/compressor.rb
 lib/curtail_rb/preferences_dialog.rb
 lib/curtail_rb/result_item_manager.rb

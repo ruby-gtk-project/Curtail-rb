@@ -19,13 +19,21 @@ TREE=${1%/}
 QUIET=${2:-}
 
 files() {
+  # po/ used to be excluded outright and build-pipeline files (Rakefile,
+  # data/*.in, data/*.xml) were never in the matched-extension list at all -
+  # between them an excuse written into POTFILES.in's own comments, or a
+  # Rakefile task description, passed every scan clean. po/*.po itself (the
+  # catalogues, not comments about them) stays excluded: translator prose in
+  # 40 languages is not an excuse to scan, just noise.
   find "$TREE" -type f \
     -not -path '*/.git/*' -not -path '*/node_modules/*' -not -path '*/vendor/*' \
     -not -path '*/_build/*' -not -path '*/build/*' -not -path '*/.bundle/*' \
-    -not -path '*/po/*' -not -path '*/.claude/skills/*' \
+    -not -path '*/.claude/skills/*' -not -name '*.po' \
     \( -name '*.md' -o -name '*.rb' -o -name '*.txt' -o -name 'TODO*' \
        -o -name '*.vala' -o -name '*.c' -o -name '*.h' -o -name '*.py' \
-       -o -name '*.js' -o -name '*.rs' \) 2>/dev/null
+       -o -name '*.js' -o -name '*.rs' -o -name 'Rakefile' -o -name '*.xml' \
+       -o -name '*.xml.in' -o -name '*.desktop' -o -name '*.desktop.in' \
+       -o -name 'POTFILES.in' \) 2>/dev/null
 }
 
 # phrase-regex <TAB> verdict
@@ -45,6 +53,7 @@ upstream (does|has) this too|upstream.s own todo	upstream's debt is not your lic
 (not ported|unported)\b	honest but toothless - name the behaviour and owe it
 (^|[-*][[:space:]]*)(NOT IMPLEMENTED|TODO|FIXME|Known limitation|Caveat):	a status field - reads as filed, and filed reads as approved
 (this|it) (was|is) not (implemented|built|ported)	passive voice - no author, so no one to hold to it
+already (in|covered by|included in|handled by|part of) the (catalogue|translation|test|spec)s?	asserts coverage that was never actually re-checked against the current state
 PAT
 )
 

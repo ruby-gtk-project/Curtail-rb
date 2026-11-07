@@ -110,10 +110,23 @@
         typelibPath = pkgs.lib.makeSearchPath "lib/girepository-1.0"
           (map (drv: drv.out or drv) (gtkStack ++ [ pkgs.at-spi2-core ]));
 
+        # `gemdir = ./.` would point bundlerEnv at the root Gemfile, which
+        # pulls in curtail-rb.gemspec via a bare `gemspec` directive. That
+        # directive only resolves against a real .gemspec file sitting next
+        # to the Gemfile, and the Gemfile bundlerEnv copies into the nix
+        # store (as `confFiles`, for every rake/bundle/rubocop binstub's
+        # BUNDLE_GEMFILE) carries no such file — so `Bundler.setup` dies
+        # with "There are no gemspecs at ...gemfile-and-lockfile" the moment
+        # any of those binstubs runs, which is every one of them. nix/Gemfile
+        # is the runtime-only bundle converge-port-gem.sh derives from the
+        # gemspec instead: no `gemspec` directive, so there is nothing for
+        # that copy to be missing.
         gems = pkgs.bundlerEnv {
           name = "curtail-rb-gems";
           inherit ruby gemConfig;
-          gemdir = ./.;
+          gemfile = ./nix/Gemfile;
+          lockfile = ./nix/Gemfile.lock;
+          gemset = ./nix/gemset.nix;
         };
 
       in
@@ -174,6 +187,17 @@
             install -Dm644 data/com.github.huluti.Curtail.Rb.gschema.xml \
               -t $out/share/glib-2.0/schemas
 
+            # The schema's own <summary>/<description> text is translated by
+            # GLib calling dgettext("curtail", …) from C, independently of
+            # this app's own Ruby-side CurtailRb::I18n — and dgettext only
+            # ever reads a compiled .mo, never the .po files above. NLSPATH
+            # on the wrapper below is what points glibc's gettext at them.
+            for po in po/*.po; do
+              lang=$(basename "$po" .po)
+              install -d "$out/share/locale/$lang/LC_MESSAGES"
+              msgfmt "$po" --output-file "$out/share/locale/$lang/LC_MESSAGES/curtail.mo"
+            done
+
             # -rbundler/setup puts the bundled gems on the load path, and
             # GI_TYPELIB_PATH keeps GObject-Introspection from re-registering
             # types the cairo gem's C extension has already registered.
@@ -182,6 +206,7 @@
               --add-flags "$out/share/curtail-rb/bin/curtail-rb" \
               --set GI_TYPELIB_PATH "${typelibPath}" \
               --set GDK_PIXBUF_MODULE_FILE "${pixbufLoaders}/loaders.cache" \
+              --set NLSPATH "$out/share/locale/%L/LC_MESSAGES/%N" \
               --prefix PATH : "${pkgs.lib.makeBinPath compressionTools}" \
               --prefix XDG_DATA_DIRS : "$out/share" \
               --prefix XDG_DATA_DIRS : "$out/share/gsettings-schemas/$pname-$version" \
@@ -218,9 +243,20 @@
             # rxgettext, the extractor `rake pot` drives. GNU xgettext claims
             # to support Ruby but only shells out to this, so without it
             # `xgettext --language=Ruby` fails.
-            pkgs.rubyPackages_3_4.gettext
-            # The spec runner. The suite is plain RSpec, so this is enough.
-            pkgs.rubyPackages_3_4.rspec
+            pkgs.rubyPackages_3_3.gettext
+            # The spec runner and `rake test`'s Minitest — these aren't in
+            # nix/Gemfile (that's runtime-only, for the packaged app), so
+            # they come from nixpkgs directly, matching `ruby`'s own 3.3,
+            # not the 3.4 these were pinned to before (a different mismatch
+            # that happened to still load, since both are pure Ruby).
+            pkgs.rubyPackages_3_3.rspec
+            pkgs.rubyPackages_3_3.minitest
+            # `rake lint` / the house style check. Not a nix/Gemfile runtime
+            # dependency either, and deliberately run as a bare `rubocop`
+            # rather than `bundle exec rubocop`: bundle's BUNDLE_GEMFILE here
+            # is nix/Gemfile, the runtime-only bundle, which doesn't carry
+            # rubocop and was never meant to.
+            pkgs.rubyPackages_3_3.rubocop
             # This machine may have no display server at all, so the shell
             # carries one it can start itself: `xvfb-run ruby exe/<app>` both
             # launches the app and is how test/drive_*.rb is run.
@@ -237,6 +273,12 @@
             export RUBYLIB="$PWD/lib''${RUBYLIB:+:$RUBYLIB}"
             export GDK_PIXBUF_MODULE_FILE="${pixbufLoaders}/loaders.cache"
             export XDG_DATA_DIRS="$PWD/tmp/share:${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}:${pkgs.gtk4}/share/gsettings-schemas/${pkgs.gtk4.name}:${pkgs.adwaita-icon-theme}/share:$XDG_DATA_DIRS"
+            # The GSettings schema's <summary>/<description> text is
+            # translated by GLib calling dgettext("curtail", …) from C,
+            # which reads a compiled .mo via glibc's own NLSPATH search —
+            # XDG_DATA_DIRS plays no part in it. `rake mo` compiles
+            # po/*.po to exactly this layout.
+            export NLSPATH="$PWD/tmp/share/locale/%L/LC_MESSAGES/%N"
             unset BUNDLE_GEMFILE BUNDLE_FROZEN BUNDLE_PATH
             echo "curtail-rb devshell — ruby $(ruby -e 'print RUBY_VERSION')"
             echo "  rake schema           compile the GSettings schema into tmp/share"
