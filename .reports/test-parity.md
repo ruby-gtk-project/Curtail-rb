@@ -3,10 +3,11 @@
 | | |
 |---|---|
 | Upstream | `origin/main` @ `1536d90` |
-| Port | `ruby` (this audit) |
+| Port | `ruby` (this audit, re-run against current `HEAD`) |
 | Upstream tests | 0 |
 | Ported | 0 |
-| Gaps | 0 |
+| Gaps (0/0 parity itself) | 0 |
+| New finding this round | the documented single entry point, bare `rake`, is a no-op |
 
 ## Upstream has no test suite
 
@@ -23,68 +24,157 @@ Parity is 0/0 and is met trivially. **The port therefore inherits no safety
 net from upstream** — every check the port runs was written for the port and
 pins nothing upstream itself considered worth pinning down.
 
-## What the port actually runs, and whether it runs
+## The binstub/Bundler defect a previous round of this audit found: now fixed
 
-This is the part a 0/0 census must not let slide. The repo advertises a
-single blessed command — the `nix develop` banner literally says
-`rake    test + lint` — and **that command does not work**:
+An earlier `.reports/test-parity.md` on this branch (commit `8393a06`)
+reported that every Nix-wrapped binstub in this devshell hardcoded
+`BUNDLE_GEMFILE` to a store path whose generated `Gemfile` had a bare
+`gemspec` directive and no `.gemspec` beside it, so `rake`/`bundle exec
+rubocop`/etc. all died with "There are no gemspecs at
+...gemfile-and-lockfile" before running anything. Commit `f6a417d` ("Fix
+the gemspec-less devshell binstubs, and close the translation-catalogue
+gap") changed `flake.nix` to build the devshell's `bundlerEnv` from
+`nix/Gemfile` (runtime-only, no `gemspec` directive) instead of the root
+Gemfile, and moved rubocop/rspec/minitest to plain nixpkgs packages.
+Re-verified in this round:
+
+```
+$ nix develop --command rake -T
+curtail-rb devshell — ruby 3.3.10
+  rake schema           compile the GSettings schema into tmp/share
+  ./bin/curtail-rb      run the app
+  rake                  test + lint
+NOTE: kettle-dev isn't installed, or is disabled for 3.3.10 in the current environment
+rake build  ...
+```
+
+`rake -T`, `rake schema`, `rake test`, `rake drive`, `rake i18n`, `rake po`,
+`rake pot`, `rake mo`, `rake merge_data` all now run through the documented
+`nix develop` entry point without the Bundler crash. That part of the
+earlier finding is resolved and this round confirms it by direct
+reproduction, not by trusting the commit message.
+
+## New finding this round: bare `rake` does not do what it is advertised to do
+
+The devshell banner (printed by `nix develop` itself, reproduced above)
+says `rake    test + lint`. `CLAUDE.md`/`AGENTS.md` on this branch says:
+
+> `rake    # units, UI drives, locale drives, catalogues, rubocop`
+
+Both describe the **bare, no-argument** `rake` invocation. Reading
+`Rakefile:61-65`:
+
+```ruby
+# Define a base default task early so other files can enhance it.
+desc "Default tasks aggregator"
+task :default do
+  puts "Default task complete."
+end
+```
+
+Nothing in the rest of the 343-line `Rakefile` adds a prerequisite to
+`:default` (confirmed with `grep -ni default Rakefile` — the only other two
+hits are the comment line and the `rake -T` doc-comment above the method
+table; no `Rake::Task[:default].enhance`, no `task default: [...]`
+anywhere). Loading the Rakefile and inspecting the task object directly
+confirms this is not a doc-comment slip:
+
+```
+$ nix develop --command ruby -e '
+    require "rake"; load "Rakefile"
+    puts Rake::Task[:default].prerequisites.inspect
+    puts Rake::Task[:default].actions.length'
+[]
+1
+```
+
+Running it bears this out — bare `rake` prints one line and exits,
+regardless of test or lint state:
 
 ```
 $ nix develop --command xvfb-run -a rake
 ...
-/nix/store/.../bundler-2.7.2/.../dsl.rb:88:in `gemspec':
-[!] There was an error parsing `Gemfile`: There are no gemspecs at
-/nix/store/la7sgpmcsbbf06s5v6arqzyl64a1ff9h-gemfile-and-lockfile.
-Bundler cannot continue.
+NOTE: kettle-dev isn't installed, or is disabled for 3.3.10 in the current environment
+Default task complete.
 ```
 
-Every Nix-wrapped binstub in this devshell hardcodes
-`ENV["BUNDLE_GEMFILE"]` to a store path whose generated `Gemfile` still has
-a bare `gemspec` directive but ships without the `.gemspec` file it points
-at. This is **not overridable from the calling shell** — the binstub sets
-the variable itself, after any shell export. Confirmed broken for every one
-of: `rake` (bare), `rake -T`, `rake schema`, `bundle exec rake schema`,
-`bundle exec rubocop`. This means, as shipped, **nobody can run `rake test`,
-`rake drive`, `rake i18n`, `rake po`, `rake lint`, or `rake schema` through
-the documented entry point** in this devshell. That is a devshell/flake
-packaging defect, not a port-code defect, and it is reported here rather
-than filed as a parity gap because it sits in `flake.nix`/`gemset.nix`, not
-in `lib/`. But it is exactly the kind of thing this skill exists to catch:
-a drive or test run that nobody can reproduce through the advertised
-command is unverified, regardless of what a status line elsewhere claims.
+The "NOTE: kettle-dev isn't installed" line is the tell: the comment
+("Define a base default task early so other files can enhance it") expects
+the `kettle-dev` gem to wire `test`/`lint` onto `:default` once it loads,
+and in this devshell it does not load, so the enhancement never happens and
+the stub is all that is left. **This means the one command the devshell
+banner and the project's own `CLAUDE.md`/`AGENTS.md` tell a person to run
+for "test + lint" runs neither.** A person (or an agent) who trusts the
+banner and runs bare `rake` gets a false "complete" with zero checks
+executed, and would have no reason to suspect anything is wrong — there is
+no error, no missing-coverage warning, just a one-line success message.
 
-**Worked around for this audit** by stepping around the broken binstubs:
-schema compiled by hand (`glib-compile-schemas` directly, mirroring the
-`rake schema` task's two lines) and each suite invoked directly with `ruby`:
+## `rake lint` itself currently fails — outside `lib/`, but a real failure
+
+`rake test` runs clean through the documented command now (see below), but
+`rake lint` (`sh 'rubocop'`, scanning the whole repo tree — `.rubocop.yml`
+excludes `tmp/**/*`, `pkg/**/*`, `vendor/**/*` etc. but not `gemfiles/` or
+`spec/`) currently exits 1:
+
+```
+$ nix develop --command rake lint
+...
+87 files inspected, 99 offenses detected, 90 offenses autocorrectable
+rake aborted!
+Command failed with status (1): [rubocop]
+```
+
+Narrowed down: **every one of the 99 offenses is in `gemfiles/**` and
+`spec/spec_helper.rb`** — gem-packaging scaffolding from the `kettle-jem`
+template (predates the binstub fix; `git log -- spec/spec_helper.rb` shows
+it landed in commit `90ed0cd`, well before `f6a417d`'s "all run clean"
+claim), not in the ported app:
+
+```
+$ nix develop --command rubocop lib/ exe/
+Inspecting 21 files
+.....................
+21 files inspected, no offenses detected
+```
+
+So the port's own code (`lib/`, `exe/`) is rubocop-clean, but `rake lint`
+— the task the banner says bare `rake` runs — fails today. Commit
+`f6a417d`'s message asserts "`rake schema/test/po/pot/lint/drive/i18n` and
+`rake` all run clean"; `rake lint` does not, right now, on this tree, and
+`rake` (bare) never even gets to try.
+
+## What actually runs, and what it proves
+
+Invoked exactly as the devshell/`AGENTS.md` instruct — `nix develop
+--command xvfb-run -a <command>` — using the explicit per-task commands
+(`rake test`, `rake drive`, `rake i18n`) since bare `rake` is a no-op:
 
 ```sh
-nix develop --command bash -c 'mkdir -p tmp/share/glib-2.0/schemas && \
-  cp data/com.github.huluti.Curtail.Rb.gschema.xml tmp/share/glib-2.0/schemas/ && \
-  glib-compile-schemas tmp/share/glib-2.0/schemas'
-
-nix develop --command xvfb-run -a ruby -Ilib -Itest test/units_test.rb
-nix develop --command xvfb-run -a ruby test/drive_window.rb
-nix develop --command xvfb-run -a ruby test/drive_compression.rb
-nix develop --command xvfb-run -a ruby test/drive_dialogs.rb
-nix develop --command xvfb-run -a ruby test/drive_modes.rb
-nix develop --command xvfb-run -a ruby test/drive_i18n.rb
+nix develop --command xvfb-run -a rake test
+nix develop --command xvfb-run -a rake drive
+nix develop --command xvfb-run -a rake i18n   # runs the four-locale drive, uses the same 5 drive_*.rb scripts
 ```
 
 Results, reproduced independently in this audit:
 
 | Suite | Result |
 |---|---|
-| `test/units_test.rb` (Minitest, 44 methods) | 44 runs, 307 assertions, **0 failures, 0 errors, 0 skips** |
-| `test/drive_window.rb` | 5 of 5 checks passed, `DRIVE OK` |
-| `test/drive_compression.rb` | 34 of 34 checks passed, `DRIVE OK` |
-| `test/drive_dialogs.rb` | 41 of 41 checks passed, `DRIVE OK` |
-| `test/drive_modes.rb` | 23 of 23 checks passed, `DRIVE OK` |
-| `test/drive_i18n.rb` | 25 of 25 checks passed, `DRIVE OK` |
+| `rake test` → `test/units_test.rb` (Minitest, 44 methods) | 44 runs, 307 assertions, **0 failures, 0 errors, 0 skips** |
+| `rake drive` → `test/drive_window.rb` | 5 of 5 checks passed, `DRIVE OK` |
+| `rake drive` → `test/drive_compression.rb` | 34 of 34 checks passed, `DRIVE OK` |
+| `rake drive` → `test/drive_dialogs.rb` | 41 of 41 checks passed, `DRIVE OK` |
+| `rake drive` → `test/drive_modes.rb` | 23 of 23 checks passed, `DRIVE OK` |
+| `rake drive` → `test/drive_i18n.rb` | 25 of 25 checks passed, `DRIVE OK` |
 
 5 + 34 + 41 + 23 + 25 = **128 checks**, matching the runtime gate figure this
-round (`drive_ok=true, 128 checks passed, 0 failed`). That figure is real
-and independently reproducible — but only by bypassing `rake`, which is the
-only command the repo tells a person to run.
+round (`drive_ok=true, 128 checks passed, 0 failed`, 7 components). That
+figure is real and was independently reproduced in this audit via `rake
+drive` directly (now that the binstub is fixed) — but it is **not** what a
+person gets by running the one command the banner tells them to run. The
+runtime gate passing is evidence about `rake drive`/`rake test`; it says
+nothing about bare `rake`, and nothing in the gate's own numbers would
+surface that bare `rake` (and therefore the documented default workflow) is
+a no-op.
 
 ## Extra (not part of any upstream count, since upstream has none)
 
@@ -102,13 +192,21 @@ only command the repo tells a person to run.
   not a parity gap (upstream has no RSpec suite to port either) but it is
   worth recording plainly: the `spec/` directory is scaffolding from the
   gem template (`kettle-jem`), not a second test suite, and nothing should
-  cite its presence as evidence of coverage.
+  cite its presence as evidence of coverage. It is also the source of 2 of
+  the 99 `rake lint` offenses above.
 
 ## Rules followed
 
 - Upstream's absence of tests is stated outright, not left as an implied
   pass.
 - The "128 checks" figure is reported with the exact command used to
-  reproduce it, not as a bare adjective.
-- The broken `rake`/`bundle` binstub is reported as a finding in its own
-  right rather than silently worked around and left unmentioned.
+  reproduce it, not as a bare adjective, and is explicitly distinguished
+  from what bare `rake` produces.
+- The previously reported binstub defect was re-verified rather than
+  assumed fixed on the strength of the commit message that claimed to fix
+  it — and that same commit's "all run clean" claim is checked line by
+  line, finding one part true (`rake test`/`rake drive`/`rake schema`) and
+  one part still false (`rake lint`, and bare `rake` never reaching either).
+- A narrow, reproducible scope (`rubocop lib/ exe/`) is used to separate the
+  port's own code quality (clean) from the scaffold files failing lint
+  (not clean), so the finding is not overstated into "the port fails lint."

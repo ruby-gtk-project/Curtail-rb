@@ -5,6 +5,16 @@
 | Upstream | `origin/main` @ `1536d90` |
 | Port | `ruby` (this audit) |
 
+Re-audit note: `lib/` and `exe/` are unchanged since this inventory was
+written (`git diff 8393a06 HEAD -- lib/ exe/` is empty against the commit
+that introduced this file), so the tables below were re-read against
+current `origin/main` @ `1536d90` and stand without modification. The
+`rake`/devshell and translation-pipeline findings from this round live in
+`.reports/test-parity.md`, `.reports/translation-parity.md` and
+`.reports/accountability-ensurance.md` — they are app-wide/build-pipeline
+findings, not widget-identification findings, so they do not change
+anything below.
+
 Scan produced with the symbol table built from this machine's GTK4/Adwaita
 GIR (`gir-symbols.sh`, 1205 symbols) and `component-scan.sh` run on an
 `origin/main` worktree and on the `ruby` tree. Raw TSVs are reproducible with:

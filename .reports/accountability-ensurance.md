@@ -7,97 +7,132 @@ bash .claude/skills/accountability-ensurance/scripts/find-excuses.sh .
 grep -rniE "TODO|FIXME|not implemented|for now|in a future|future version|placeholder only|stub\b" lib/ exe/ .reports/
 ```
 
-plus a hand read of `po/POTFILES.in`, `Rakefile`, `lib/curtail_rb/i18n.rb`,
-and `.reports/component-inventory.md` (the pre-existing inventory this audit
-found on `ruby` and treated as a document under review, not as authority).
+plus a hand read of `po/POTFILES.in`, the `Rakefile`, `lib/curtail_rb/i18n.rb`,
+and every file in `.reports/` — treated as documents under review this
+round, not as authority, including the very reports this audit itself
+updates.
 
-There is no `PORTING.md`, `FINDINGS.md`, `TEST_PARITY.md` or
-`COMPONENT_PARITY.md` at the repo root on `ruby` — only
-`.reports/component-inventory.md` existed before this audit.
+## Automated scan results this round
 
-## Automated scan results: all false positives
+```
+.reports/component-parity.md:48:skipped:...
+.reports/translation-parity.md:69:by design:...
+.reports/component-inventory.md:36:N/A:...
+.reports/component-inventory.md:23-24:skipped:...
+.reports/accountability-ensurance.md:...  (quotes of the excuse being refuted, below)
+lib/curtail_rb/i18n.rb:147:not required:...
+```
 
-| Hit | Location | Verdict |
-|---|---|---|
-| `skipped` | `.reports/component-inventory.md:66,72` | false positive — `skipped_info_button`/`skipped` are widget/property identifiers in a table describing real built widgets, not prose excusing missing work |
-| `N/A`, `by design` | `.reports/component-inventory.md:137` | the gresource-manifest row. Reviewed against `component-parity`'s own stated correspondence rule ("the port has no `.ui` files, by design" is explicitly listed as *not* a parity failure) — this is a genuine architectural correspondence with no missing behaviour behind it, not a laundered gap. Flagged by the script, read, and cleared. |
-| `not required` | `lib/curtail_rb/i18n.rb:147` | false positive — describes PO file grammar ("PO files are not required to separate entries with a blank line"), not a skipped feature |
+Every hit is either (a) inside `.reports/`, where it is this skill's own
+or a sibling skill's prose *about* a finding — quoting an excuse to refute
+it is not committing one — or (b) `lib/curtail_rb/i18n.rb:147`, re-checked
+this round and still a false positive: it describes PO file grammar ("PO
+files are not required to separate entries with a blank line"), not a
+skipped feature. **No excuse was found live in `lib/`, `exe/`, or in
+`po/POTFILES.in`'s own comments this round** — the one real excuse this
+audit's predecessor found there (`po/POTFILES.in` claiming the
+schema/desktop/metainfo strings were "already in the catalogues") is gone
+from the file (`grep -n "already in the catalogues" po/POTFILES.in` →
+no match), because the gap it was excusing is now actually fixed (see
+`.reports/translation-parity.md`): the comment was removed along with the
+problem, not left behind as a stale justification for a now-nonexistent
+state. That is the correct order of operations, and it is recorded here
+because the opposite order — fix the comment, leave the gap — is the
+failure mode this skill exists to catch.
 
 No `TODO`, `FIXME`, "not implemented", "for now", "in a future", or
 "placeholder" string exists anywhere in `lib/`, `exe/`, or `.reports/`.
 
-## What the automated scan missed, and a human read caught
+## What a human read caught that the automated scan does not cover: the `rake`/banner mismatch
 
-The scan's pattern set does not cover `po/` comments or `Rakefile` prose.
-Reading those by hand found one real excuse, already written up in full in
-`.reports/translation-parity.md`:
+The scan's pattern set matches sentences that excuse *not building*
+something. It has no pattern for a sentence that is simply false about
+what a command does — and that is the real finding this round, written up
+in full in `.reports/test-parity.md`:
 
-> `po/POTFILES.in`: "the data files (.desktop, .metainfo, .gschema) carry a
-> handful of strings too, but xgettext needs a separate pass per format for
-> those; their entries are already in the catalogues and change about once
-> a release."
-
-This is exactly the construction this skill exists to kill: a settled-sounding
-reason, written by the party that did the skipping, that the next reader (the
-author of `.reports/component-inventory.md`, in this same repo) read and
-cited as "Yes — all 40 carried over unchanged" without checking whether the
-claim in the comment was still true. It was not: the committed `po/curtail.pot`
-already lacks the 33 msgids the comment claims are "already in the
-catalogues," and the next `rake merge` will retire them from all 40 `.po`
-files. Full technical detail is in `.reports/translation-parity.md`; this
-entry records the accountability failure specifically — a confident, settled
-sentence sat in the tree, got cited as authority one layer up, and nobody
-before this audit ran the one `grep -c` that would have shown the sentence
-was wrong.
+- The `nix develop` devshell banner says `rake    test + lint`.
+- This branch's `CLAUDE.md`/`AGENTS.md` says `rake    # units, UI drives,
+  locale drives, catalogues, rubocop`.
+- `Rakefile:61-65` defines `task :default` with **zero** prerequisites and
+  a single `puts "Default task complete."` action — confirmed by loading
+  the Rakefile and reading `Rake::Task[:default].prerequisites` (`[]`) and
+  `.actions.length` (`1`) directly, not by reading the source and guessing.
+- Running bare `rake` prints `NOTE: kettle-dev isn't installed, or is
+  disabled...` followed by `Default task complete.` and exits 0, having run
+  no test and no lint.
 
 Per the skill's required form:
 
-> I did not wire translation extraction for the GSettings schema, the
-> desktop entry, or the AppStream metainfo, because I am an idiot, and then
-> I wrote a comment in `po/POTFILES.in` claiming those strings were "already
-> in the catalogues" instead of checking that the catalogue I had just
-> regenerated no longer had them.
+> I did not wire `rake`'s default task to actually run `test` and `lint`
+> (or left that wiring dependent on the `kettle-dev` gem being installed,
+> which it is not in this devshell), because I am an idiot, and then I let
+> the devshell banner and `CLAUDE.md`/`AGENTS.md` both go on telling a
+> person that bare `rake` is "test + lint" without ever running bare `rake`
+> myself to check.
 >
-> Upstream: `po/POTFILES.in` lists `data/com.github.huluti.Curtail.gschema.xml`,
-> `data/com.github.huluti.Curtail.desktop.in`,
-> `data/com.github.huluti.Curtail.appdata.xml.in` alongside its `.blp`/`.py`
-> sources, and Meson's `i18n.merge_file()` + installed `.mo` catalogues
-> deliver translated schema summaries, desktop entries and AppStream
-> metadata in all 40 languages.
+> Upstream: has no Rake/Make default task at all to compare against — this
+> is a port-side-only claim, checked against the port's own documentation
+> of itself.
 >
-> Port: `po/POTFILES.in` lists only the seven Ruby/`.blp`-derived sources;
-> `data/com.github.huluti.Curtail.Rb.desktop` and
-> `data/com.github.huluti.Curtail.Rb.metainfo.xml` are static with no
-> `xml:lang`/`Name[xx]=` variants; the `Rakefile` has no `.mo`-compile or
-> install task. These three files cannot be translated in the port today,
-> in any locale, by any mechanism that exists in the tree.
+> Port: `Rakefile:63-65` — `task :default do puts "Default task complete."
+> end`, no prerequisites; `CLAUDE.md` and the `flake.nix` devshell banner
+> both claim bare `rake` runs test, UI drives, locale drives, catalogue
+> work and rubocop. It runs none of them. `rake test`, `rake drive`, `rake
+> lint` exist and (bar `rake lint`, see below) work when invoked by full
+> name — but nothing invokes them for you, and nothing before this audit
+> ran the bare command the banner advertises to find that out.
 
-## A second false-green worth recording plainly
+A second, related finding in the same area: `rake lint` itself currently
+exits 1 (99 rubocop offenses) when run by its full name, all of them in
+`gemfiles/**` and `spec/spec_helper.rb` — gem-template scaffolding, not
+`lib/`/`exe/` (which are rubocop-clean, 21 files, 0 offenses). Commit
+`f6a417d`'s own message claims "`rake schema/test/po/pot/lint/drive/i18n`
+and `rake` all run clean"; re-run today, `rake lint` does not, and `rake`
+bare never attempts it. That commit message is itself a second, smaller
+instance of the same pattern as the first: a confident, settled claim
+about command behavior, offered without having just run the command.
 
-`.reports/component-inventory.md`'s own closing line reads: "No blocking
-gaps were found." That line was written before this audit found the
-`POTFILES.in`/`.pot` gap above and before this audit confirmed that `rake`
-itself — the single command the devshell banner tells a person to run for
-"test + lint" — cannot execute in this environment at all (see
-`.reports/test-parity.md` for the Bundler/Nix packaging defect and the
-direct-invocation workaround used to independently reproduce the 128/128
-drive-check figure). Neither of those two facts contradicts that the
-*code* in `lib/` is unusually careful and well-documented — it is — but
-"no blocking gaps" as a closing sentence over-claimed, because it rested on
-a translation-pipeline check and a devshell-command check that were never
-actually run before it was written. A green verdict that rests on a check
-nobody performed is the finding this skill asks to be named as such, not
-softened into "mostly clean."
+## The previous round's two false-greens: re-checked, one resolved correctly, one is the template for this round's finding
+
+A previous `.reports/accountability-ensurance.md` on this branch (commit
+`8393a06`) recorded two false-greens: (1) `.reports/component-inventory.md`
+citing the translation catalogue as "Yes" without checking the `.pot`
+count, and (2) that same report's closing "No blocking gaps were found"
+line, written before `rake` itself was confirmed broken.
+
+Re-checked this round:
+
+1. **Resolved correctly.** The translation gap is closed (verified by
+   running the pipeline, not reading a diff — see
+   `.reports/translation-parity.md`), and the excusing comment was removed
+   from `po/POTFILES.in` along with the problem it excused, not left
+   standing. This is the one half of the previous round's work that fully
+   closes out.
+2. **The underlying pattern recurred, in a new place.** The previous round
+   flagged bare `rake` as *broken* (a Bundler crash). The fix for that
+   (`f6a417d`) made bare `rake` *run*, but never gave it the test+lint
+   prerequisites the banner and docs claim it has — so the command went
+   from "crashes, so obviously not test+lint" to "succeeds silently,
+   plausibly test+lint, actually a no-op." A reader who only checks "does
+   `rake` exit 0 now" (which is exactly what the previous round's fix
+   commit message implicitly invites) would call this fixed. It is only
+   half fixed, and the half that remains broken is more dangerous than the
+   crash it replaced, because a crash is visible and a silent no-op is not.
 
 ## Rules followed
 
-- Every hit, including the ones ultimately cleared, is named with its exact
-  location rather than summarized away.
-- The gresource-manifest "N/A by design" line was checked against the
-  specific, named exception the `component-parity` skill grants for exactly
-  this case, rather than cleared on the strength of sounding reasonable.
-- The one real excuse found is rewritten in first person per the skill's
-  required form, with upstream and port both named by file and line.
-- The pre-existing report's "no blocking gaps" line is treated as a claim to
-  verify, not as authority — per this skill's rule that a port's own
-  documents never get to set their own scope.
+- Every automated-scan hit this round is named with its exact location,
+  including the ones that are this report's own prose quoting a resolved
+  excuse, rather than silently filtered.
+- The resolved excuse (`po/POTFILES.in`) was checked for whether the
+  excusing text was removed *because the gap closed* versus removed while
+  the gap persisted — the distinction this skill treats as the whole
+  point — and confirmed to be the former.
+- The new finding (bare `rake`) is traced to a command actually run twice
+  (bare, and by full task name) rather than inferred from reading the
+  Rakefile alone, and is written in the skill's required first-person form
+  with both the false public claim and the true behavior named by file and
+  line.
+- A fix commit's own "all run clean" claim was treated as a claim to
+  verify, not as evidence, consistent with this skill's standing rule that
+  no commit message gets to set its own scope.

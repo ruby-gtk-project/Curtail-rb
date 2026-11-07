@@ -3,10 +3,10 @@
 | | |
 |---|---|
 | Upstream | `origin/main` @ `1536d90` |
-| Port | `ruby` (this audit) |
+| Port | `ruby` (this audit, re-run against current `HEAD`) |
 | Languages shipped | 40/40 — `po/*.po`, `po/LINGUAS` are byte-identical to upstream |
 | Ruby-source msgids | parity, confirmed line by line |
-| **Catalogue pipeline** | **gap** — see below |
+| **Catalogue pipeline** | **closed this round** — see below for what changed and how it was re-verified |
 
 ## The `.po` files themselves: clean
 
@@ -20,18 +20,6 @@ survives today, in the files as committed.
 
 ## Ruby-sourced strings: spot-checked and confirmed matching
 
-The scanner's raw msgid diff between the two trees is dominated by
-`!unresolved` noise (f-string interpolations upstream, variable references
-in the port's factored helpers) that resolves to nothing wrong on inspection
-— e.g. upstream's `_(f"Safe mode with "{suffix_prefix}" suffix")` has no
-live msgid in the current `.pot` either (the only matching entries are
-`#~`-obsolete in `fr.po`), so upstream's own build already shows this
-string in English in every locale. The port's `affixed()`
-(`lib/curtail_rb/i18n.rb` consumer at `lib/curtail_rb/window.rb:181-199`)
-reproduces the same effective behaviour and documents why in a comment
-naming the exact obsolete-entry mechanics. Checked by hand and confirmed
-correct:
-
 - `"Analyzing Images"` / `"Analyzing your images before compression…"` —
   byte-identical, including the real ellipsis character, between
   `window.blp:119-120` and `window.rb:624-625`.
@@ -39,134 +27,117 @@ correct:
   period) between `compressor.py:43` and `compressor.rb:58,86`.
 - `"Set the level of compression, 6 is the highest but slowest level"` —
   byte-identical between the *current* `preferences.blp:84,130` and the
-  port's `LEVEL_SUBTITLE` constant. (The committed `curtail.pot` disagrees
-  with upstream's own current source here — it still has the pre-blueprint
-  wording "level of **the** compression" against a `data/ui/preferences.ui`
-  path that no longer exists upstream. That is upstream's own `.pot` being
-  stale against its own sources, already called out in
-  `lib/curtail_rb/i18n.rb`'s header comment, and the port correctly matches
-  upstream's *current source*, not its stale catalogue.)
+  port's `LEVEL_SUBTITLE` constant.
 - `"Lossless Compression"` / `"Lossy Compression"` (preferences group
   titles) — byte-identical.
 
 No reworded or unmarked Ruby-source string was found.
 
-## The real gap: three file categories upstream translates that the port's pipeline cannot reach
+## The gap a previous round found: closed, re-verified by running the pipeline, not by reading a diff
 
-Upstream's `po/POTFILES.in` lists seven files, **three of them not Ruby
-sources**:
+A previous `.reports/translation-parity.md` on this branch (commit
+`8393a06`) reported that `po/POTFILES.in` listed only the seven Ruby
+sources, excluded the GSettings schema, the desktop entry and the AppStream
+metainfo with a comment claiming their strings were "already in the
+catalogues" (false — the committed `.pot` already lacked them, 73 msgids
+against upstream's 106), and that there was no `.mo` compile step and no
+desktop/metainfo merge step, so those three files could never surface a
+translation in any locale.
 
+Commit `f6a417d` ("Fix the gemspec-less devshell binstubs, and close the
+translation-catalogue gap") is the direct response: it adds the three data
+files back to `po/POTFILES.in`, adds `po/extract_data_strings.rb` (a
+format-specific scanner for `.desktop`/`.gschema.xml`/`.metainfo.xml`
+keys, msgcat'd alongside rxgettext's Ruby-source output since rxgettext
+only understands Ruby), adds a `rake mo` task (`msgfmt` to
+`tmp/share/locale/<lang>/LC_MESSAGES/curtail.mo`, with `NLSPATH` routing
+glibc's gettext there), and adds `rake merge_data` (the same `msgfmt
+--desktop`/`--xml` template merge the upstream package build does, writing
+to `tmp/share`).
+
+This round re-ran the pipeline rather than trusting the commit message:
+
+```sh
+$ nix develop --command rake pot && grep -c '^msgid "' po/curtail.pot
+107
+$ git show origin/main:po/curtail.pot | grep -c '^msgid "'
+106
 ```
-data/com.github.huluti.Curtail.appdata.xml.in
-data/com.github.huluti.Curtail.desktop.in
-data/com.github.huluti.Curtail.gschema.xml
-data/ui/preferences.blp
-data/ui/result-item-row.blp
-data/ui/shortcuts-dialog.blp
-data/ui/window.blp
+
+107 vs. 106 — no longer a 73-vs-106 shortfall. The one-entry surplus is the
+port's own app name (`"Curtail (Ruby)"`, the `.desktop` `Name=`, which has
+no upstream counterpart by design — the port is named differently to avoid
+colliding with the Python app). Diffing every other msgid confirms the
+same pre-existing "upstream's own `.pot` is stale against its own current
+source" cases already documented before (`"Unable to read file
+information."` and `"Getting things ready"` are `#~`-obsolete-or-absent in
+upstream's *current* `src/*.py` — confirmed with `git grep` against
+`origin/main`, zero hits in source — so their absence from the port's
+`.pot` is correct, not a gap) plus the same ellipsis/period/wording
+normalizations already spot-checked above. No new discrepancy.
+
+`rake mo` and `rake merge_data` were run (not just read) and their output
+inspected directly:
+
+```sh
+$ nix develop --command xvfb-run -a rake drive   # runs schema+mo+merge_data as prerequisites
+$ grep -c 'xml:lang' tmp/share/metainfo/com.github.huluti.Curtail.Rb.metainfo.xml
+151
+$ head -20 tmp/share/applications/com.github.huluti.Curtail.Rb.desktop
+[Desktop Entry]
+Name=Curtail (Ruby)
+Exec=curtail-rb %U
+Comment[az]=Şəkillərinizi sıxışdırın
+Comment[bg]=Компресирайте вашите изображения
+Comment[ca]=Comprimiu les imatges
+...
 ```
 
-The port's `po/POTFILES.in` lists only the seven Ruby sources, and says why
-it stops there:
+The merged desktop file carries `Comment[xx]=` for all 40 locales; the
+merged metainfo carries 151 `xml:lang`-bearing elements (summary +
+description paragraphs × languages). `tmp/share/locale/fr/LC_MESSAGES/`
+contains a compiled `curtail.mo`, and the GSettings schema's
+`gettext-domain="curtail"` attribute (`data/com.github.huluti.Curtail.Rb.
+gschema.xml:2`) matches the `.mo` domain name `rake mo` compiles to, so
+`glib-compile-schemas`'/`dconf`'s lookup for the schema's own
+summary/description has somewhere to find a translation. This is the
+structural mechanism the previous round reported as entirely absent; it
+now exists and produces output, confirmed by inspecting that output rather
+than by re-reading the Rakefile task names.
 
-> `# The Ruby sources, which is where every string the app renders lives. The`
-> `# data files (.desktop, .metainfo, .gschema) carry a handful of strings too,`
-> `# but xgettext needs a separate pass per format for those; their entries are`
-> `# already in the catalogues and change about once a release.`
-
-This is the excuse this org's `accountability-ensurance` skill exists to
-catch, and the automated `find-excuses.sh` scan did **not** catch it —
-it is prose in a `.po/` comment, outside the file types the script greps.
-It is caught here by hand, which is the point of running this skill rather
-than trusting the script alone.
-
-The claim in the comment is checkable, and it is false in the way that
-matters:
-
-1. **"Already in the catalogues"** — true only by accident, and only for
-   now. The `.po` files still carry these entries because nobody has run
-   `rake merge` against the committed `.pot` yet. The committed
-   `po/curtail.pot` **already lacks them**:
-
-   ```
-   $ grep -c '^msgid "' <upstream-worktree>/po/curtail.pot
-   106
-   $ grep -c '^msgid "' po/curtail.pot
-   73
-   ```
-
-   The 33-entry gap is exactly the `.gschema.xml`/`.desktop.in`/
-   `.metainfo.xml.in`-derived strings: `"Save into a new file"`,
-   `"Enable lossy mode"`, `"PNG Lossy Compression Level"`,
-   `"WebP Lossless Compression Level"`, `"Suffix/Prefix to append at new
-   file"`, `"compress;optimize;image;photo;"` (desktop `Keywords`), and
-   their descriptions — one `<summary>`/`<description>` pair per GSettings
-   key (`new-file`, `naming-mode`, `recursive`, `metadata`,
-   `file-attributes`, `lossy`, `suffix-prefix`, `png-lossy-level`,
-   `png-lossless-level`, `jpg-lossy-level`, `webp-lossy-level`,
-   `webp-lossless-level`, `jpg-progressive`, `svg-maximum-level`,
-   `compression-timeout`), confirmed present verbatim in
-   `data/com.github.huluti.Curtail.Rb.gschema.xml` — the port's own
-   schema file carries byte-identical English text to upstream's, it is
-   just never extracted.
-
-2. **The next `rake merge`** (`sh 'msgmerge', '--update', ...` against this
-   incomplete `.pot`, for all 40 `.po` files) will mark every one of those
-   ~20-30 entries `#~` (obsolete) in all 40 languages, the same fate the
-   `"Safe mode with…"` strings already suffered upstream after a rename. At
-   that point the translations are not just unextracted — they are retired,
-   and the port's own `i18n.rb` (correctly, per its own `#obsolete entries
-   are ignored` behaviour, unit-tested in `units_test.rb`) will never load
-   them again. This is a **latent, self-inflicted translation regression**
-   sitting one `rake merge` away, not a hypothetical.
-
-3. **Even if the `.pot` were fixed, there is no merge step that would ever
-   apply the result.** Upstream is built with Meson, which wires
-   `i18n.merge_file()` for `data/*.desktop.in` and
-   `data/*.appdata.xml.in` (producing localized `Name[xx]=`/`Comment[xx]=`
-   lines and `<summary xml:lang="xx">` blocks respectively) and installs
-   compiled `.mo` catalogues that `glib-compile-schemas`'
-   `gettext-domain="curtail"` attribute reads at runtime for the schema's
-   own summary/description. The port has:
-   - `data/com.github.huluti.Curtail.Rb.desktop` — a **static** file with a
-     single `Name=`/`Comment=`, no `Name[xx]=` lines, and no build step
-     that would add any.
-   - `data/com.github.huluti.Curtail.Rb.metainfo.xml` — likewise static,
-     zero `xml:lang` attributes.
-   - No `msgfmt`-to-`.mo` compile step anywhere in the `Rakefile` (`grep -n
-     msgfmt Rakefile` finds only the `--check` validation task) and no
-     install step that would place a `.mo` where `glib-compile-schemas`'
-     gettext-domain lookup or the desktop/AppStream parsers could find it.
-
-   So independent of the `POTFILES.in` gap, **these three files have no
-   mechanism to ever surface a translation in the port, in any locale**,
-   structurally — not "not yet wired", a standing fact about how the
-   `Rakefile` and the data files are built today.
-
-This contradicts `.reports/component-inventory.md`'s data-files row for the
-translation catalogue, which reads "Yes — all 40 carried over unchanged...
-`rake po`/`rake pot`/`rake merge`/`rake i18n` drive them." That line is true
-of the `.po` files' current bytes and false of the pipeline's ability to
-keep them that way, and a reader who stops at "Yes" would not know the
-pipeline is one `rake merge` away from discarding the schema/desktop/
-metainfo translations it just said were carried over.
+**This gap is closed.** The previous round's closing line — "these three
+files have no mechanism to ever surface a translation in the port, in any
+locale, structurally" — is no longer true of this tree.
 
 ## Census summary
 
-| | Upstream | Port |
+| | Upstream | Port (this round) |
 |---|---:|---:|
 | `.po`/`LINGUAS` files | 40 + 1 | 40 + 1, byte-identical |
-| `.pot` msgids (committed) | 106 | 73 |
+| `.pot` msgids (committed, regenerated via `rake pot`) | 106 | 107 (+1 is the port's own app name) |
 | Ruby/`.blp`-sourced UI strings | — | byte-identical, spot-checked |
-| `.gschema.xml`/`.desktop.in`/`.metainfo.xml.in`-sourced strings | translated via Meson `i18n.merge_file` + installed `.mo` | **never translated — no extraction, no merge, no compile, no install** |
+| `.gschema.xml`/`.desktop.in`/`.metainfo.xml.in`-sourced strings | translated via Meson `i18n.merge_file` + installed `.mo` | translated via `po/extract_data_strings.rb` + `rake mo`/`rake merge_data` — verified producing `Comment[xx]=` and `xml:lang` output for all 40 locales |
+
+## What was not independently re-verified at the deepest level
+
+`rake merge_data`'s desktop/metainfo output and `rake mo`'s compiled
+catalogues were inspected directly (above). What this audit did *not* do
+is install the compiled schema into a live `dconf`/`gsettings` instance and
+ask it for a translated `<summary>` string at runtime — that would confirm
+the last hop (GLib's own gettext lookup honoring `gettext-domain="curtail"`
+against `NLSPATH`) rather than just the files the Rakefile produces. The
+mechanism and the installed artifacts are both present and consistent with
+each other, but this is recorded as the boundary of what was checked, per
+this skill's own rule about not calling a check done when only part of it
+ran.
 
 ## Rules followed
 
+- The previous round's gap was not assumed closed on the strength of the
+  fix commit's message — `rake pot`/`rake mo`/`rake merge_data` were run
+  and their output read directly.
 - The reworded-string false leads (stale upstream `.pot` vs. current
-  upstream source) were resolved by reading the *current* source on both
-  sides, not by trusting either committed `.pot` as ground truth.
-- A msgid difference was traced to its root cause (extraction pipeline, not
-  wording) before being written down as fine or as a gap.
-- The gap is recorded against the message categories and the files that own
-  them, not laundered through "not applicable" — the `POTFILES.in` comment
-  that tried to do exactly that is quoted and refuted, not repeated.
+  upstream source) were re-confirmed against current `origin/main` source
+  with `git grep`, not re-asserted from the earlier report.
+- The one remaining unverified hop (live GLib gettext lookup at schema
+  runtime) is named explicitly rather than folded into "closed."

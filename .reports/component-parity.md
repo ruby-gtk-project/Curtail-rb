@@ -4,7 +4,7 @@
 |---|---|
 | Upstream | `origin/main` @ `1536d90` |
 | Port | `ruby` (this audit) |
-| Units with parity | 6 / 6 UI units, with one structural gap outside any single unit (see below) |
+| Units with parity | 6 / 6 UI units. Last round's file-level translation gap is closed (see re-audit note); a *different*, newly found devshell/entry-point gap sits outside any widget unit this round — see `.reports/test-parity.md` |
 
 Each unit below was checked on all four axes (count, style, behaviour, text),
 plus the two axes `component-parity` adds beyond the scan: CSS rules actually
@@ -108,22 +108,35 @@ confirmed by reading `lib/curtail_rb/compressor.rb` against
 
 **Verdict: parity.**
 
-## The one gap this unit-by-unit pass does not surface
+## Re-audit note (this round)
 
-Component parity is scoped to widgets, and none of the six units above is
-individually broken. But three **data files** that back no single widget
-unit carry their own translatable strings, and the pipeline that is supposed
-to keep them translated is incomplete — this is a gap that belongs to the
-app as a whole rather than to any one unit, and it is documented in full in
-`.reports/translation-parity.md` (the `po/POTFILES.in` exclusion of
-`.gschema.xml`/`.desktop.in`/`.metainfo.xml.in`, and the absence of any
-`.mo`-compile/install step). It does not fail any row in the tables above,
-because none of those rows' widgets show this text — the GSettings schema's
-`<summary>`/`<description>`, the desktop entry's `Name`/`Comment`, and the
-metainfo's description are read by GNOME Settings, the shell's app chooser
-and `dconf-editor`, not by any widget this port builds. Recorded here so a
-reader of this ledger is not misled into thinking six parities add up to a
-clean app; one more file-level finding sits outside the six units.
+`lib/` and `exe/` are byte-for-byte unchanged since the unit tables above
+were written (`git diff 8393a06 HEAD -- lib/ exe/` is empty), so every
+widget-axis verdict above was re-read against the current `origin/main`
+@ `1536d90` and still holds without modification.
+
+What *has* changed since those tables were written is the file-level
+translation gap this section used to record here: `po/POTFILES.in` now
+lists the GSettings schema, the desktop entry and the AppStream metainfo
+alongside the Ruby sources, `po/extract_data_strings.rb` extracts their
+strings, `rake mo` compiles catalogues and `rake merge_data` produces
+localized `Name[xx]=`/`Comment[xx]=` desktop entries and
+`<summary xml:lang="xx">` metainfo blocks — verified by running `rake pot`,
+`rake mo` and `rake merge_data` directly and inspecting
+`tmp/share/applications/com.github.huluti.Curtail.Rb.desktop` (localized
+`Comment[xx]=` for all 40 locales) and
+`tmp/share/metainfo/com.github.huluti.Curtail.Rb.metainfo.xml` (151
+`xml:lang` occurrences). Full detail in `.reports/translation-parity.md`.
+That gap is closed and no longer sits outside the six units.
+
+A different, unrelated gap sits outside all six widget units, found fresh
+in this round: the documented single entry point for the whole suite,
+bare `rake`, does not run the test and lint tasks it is advertised to run.
+See `.reports/test-parity.md` and `.reports/accountability-ensurance.md`
+for the detail — it is not a widget-level finding, so it does not change
+any verdict above, but it means this file's "6/6 with no other gap" from
+last round would have been wrong to repeat verbatim without naming the
+new one.
 
 ## Rules followed
 
