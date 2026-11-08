@@ -44,9 +44,10 @@ process rather than raising.
 ## Running and testing
 
     ./bin/curtail-rb          # or with image paths as arguments
-    rake                      # units, UI drives, locale drives, catalogues, rubocop
+    rake                      # units, schema compile, .mo compile, rubocop
     rake drive                # headless UI runs; screenshots land in tmp/shots
     rake i18n                 # the same, in fr, es, de and zh_CN
+    rake pot / po / merge     # regenerate/check/merge the gettext catalogues
 
 Strings are marked with `_()`, `p_(context, text)` for upstream's `C_`, and
 `N_()` where a literal lives in a constant and is looked up elsewhere. Keep the
