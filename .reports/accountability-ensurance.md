@@ -143,8 +143,67 @@ honestly — narrowing the docs to match what `default` actually does) gets
 checked the same way: by running the bare command and the full doc claim
 side by side, not by reading the diff that claims to fix it.
 
+## This round: the bare-`rake` scope gap is closed; a fourth round, same pattern, surfaces one layer further in
+
+Commit `0464774` ("Narrow bare-rake docs to what `default` actually
+runs"), landed after the round above and before this one, closes the
+still-open half: `AGENTS.md` now says bare `rake` runs "schema compile,
+`.mo` compile, unit tests, rubocop" and names `rake drive`/`rake i18n`/
+`rake pot`/`po`/`merge` as separate commands bare `rake` does not reach —
+checked directly against this round's `rake -P` output (`.reports/test-parity.md`),
+not trusted from the commit message. `CLAUDE.md` was already in that
+narrower form. **The bare-`rake` doc-scope false-green, chased across
+three rounds, is now genuinely closed.**
+
+The fourth round of the same pattern — a claim repeated without being
+re-run — showed up this round in a different place: this audit's own
+task handoff. The runtime gate it was given states "drive_ok=true, 123
+checks passed, 0 failed, covering 12 components" as a fact to audit
+against, not as a command to re-run. Re-running it (see
+`.reports/test-parity.md`) found that number does not reproduce (the
+actual, fresh count is 128 checks across 5 drive files, not 123/12), and
+more importantly that **a fresh `rake drive` fails about 1 run in 4** on
+an unchanged tree, in `test/drive_compression.rb`, because that script
+waits a fixed interval instead of polling for completion before checking
+whether WebP compression finished. Had this round treated the handed-off
+"drive_ok=true" as settled and skipped re-running it, this would have
+been exactly the failure mode this skill exists to catch: a green claim
+resting on something never executed this round. It is named here, in the
+first-person form, as a port finding (the test harness, not the port's
+GTK/Adwaita code, but still something this audit is accountable for
+flagging):
+
+> I did not write `test/drive_compression.rb`'s "wait for the
+> compressors" step to actually wait for the compressors — it sleeps a
+> fixed ~1.4s and then asserts every row is done — because I am an idiot,
+> and a fixed sleep that is almost always long enough looks, from the
+> green runs, exactly like a correct wait.
+>
+> Upstream: has no test suite to compare against (see
+> `.reports/test-parity.md`) — this is a port-side-only defect in the
+> port's own UI driver.
+>
+> Port: `test/drive_compression.rb:31-45` — two no-op driver steps at the
+> driver's fixed 700ms interval, then a hard assertion that every row's
+> `running` is `false`. WebP (via `cwebp`) is the slowest of the four
+> fixture formats, and whenever it has not finished compressing in that
+> window, `shape.webp: not running`, `shape.webp: reported an outcome` and
+> `controls re-enabled` fail together — reproduced once in 4 back-to-back
+> runs this round, including on a plain re-run of the identical command
+> with no code changed in between.
+
 ## Rules followed
 
+- The runtime gate stated in this round's own task handoff ("drive_ok=true,
+  123 checks, 0 failed, 12 components") was treated as a claim to verify by
+  running `rake drive` fresh, repeatedly, rather than as an audited fact —
+  consistent with this skill's rule that no claim, including one made by
+  the orchestrating task itself, gets to set its own scope or stand
+  unverified.
+- The flakiness this surfaced is reported with its reproduction rate (1 of
+  4 runs), its exact failing checks, and its root cause (a fixed-interval
+  wait, read at the named line) — not asserted and not smoothed into "it
+  passes" on the strength of the 3 later green runs.
 - Every automated-scan hit this round is named with its exact location,
   including the ones that are this report's own prose quoting a resolved
   excuse, rather than silently filtered.

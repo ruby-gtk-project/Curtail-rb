@@ -4,7 +4,7 @@
 |---|---|
 | Upstream | `origin/main` @ `1536d90` |
 | Port | `ruby` (this audit) |
-| Units with parity | 6 / 6 UI units. Last round's file-level translation gap and its bare-`rake` devshell gap are both now closed; a narrower doc-accuracy gap in the same devshell area persists outside any widget unit — see `.reports/test-parity.md` |
+| Units with parity | 6 / 6 UI units. Last round's file-level translation gap and its bare-`rake` devshell gap are both now closed, including this round's doc-accuracy narrowing (`0464774`). `lib/`, `exe/` and `data/` are byte-identical to the commit this table was built from (`git diff` against the prior audit touches only `AGENTS.md`), so the per-widget findings below stand unchanged. One caveat carries over from `.reports/test-parity.md`: "Signals actually firing" below is backed by the drive suite, and this round found that suite flaky (1 failure in 4 runs, isolated to `drive_compression.rb`'s WebP-timing wait, not to any widget-signal wiring) — the per-widget verdicts below are unaffected, but the suite that backs them is not unconditionally green on every run. |
 
 Each unit below was checked on all four axes (count, style, behaviour, text),
 plus the two axes `component-parity` adds beyond the scan: CSS rules actually

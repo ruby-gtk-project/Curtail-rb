@@ -6,7 +6,7 @@
 | Port | `ruby` (this audit, re-run against current `HEAD`) |
 | Languages shipped | 40/40 — `po/*.po`, `po/LINGUAS` are byte-identical to upstream |
 | Ruby-source msgids | parity, confirmed line by line |
-| **Catalogue pipeline** | **closed this round** — see below for what changed and how it was re-verified |
+| **Catalogue pipeline** | **closed, and still closed this round** — `po/`, `lib/` and `exe/` are unchanged since that fix (`git diff` against the prior report's commit touches only `AGENTS.md`); re-verification details below are unmodified from that round |
 
 ## The `.po` files themselves: clean
 

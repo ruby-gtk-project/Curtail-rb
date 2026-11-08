@@ -7,7 +7,7 @@
 | Upstream tests | 0 |
 | Ported | 0 |
 | Gaps (0/0 parity itself) | 0 |
-| New finding this round | the previous round's "bare `rake` is a no-op" and "`rake lint` fails" gaps are now fixed (commit `f5d2338`) — but the fix is narrower than the docs it was meant to make true: bare `rake` still does not run UI drives or locale drives, though `CLAUDE.md`/`AGENTS.md` still say it does |
+| New finding this round | the previous round's doc-drift gap is now closed (`0464774` narrowed the docs to match `f5d2338`'s fix). A new, more serious finding replaces it: `rake drive` is **flaky**, not deterministic — 1 of 4 back-to-back runs this round failed 3 of 34 checks in `test/drive_compression.rb` (`shape.webp: not running`, `shape.webp: reported an outcome`, `controls re-enabled`) on an otherwise-unchanged tree, before the aborted task could even reach `drive_dialogs.rb`/`drive_i18n.rb`/`drive_modes.rb`/`drive_window.rb`. A "drive_ok=true" read from any single run is not a safe signal. |
 
 ## Upstream has no test suite
 
@@ -215,6 +215,49 @@ drive task.
   cite its presence as evidence of coverage. It is also the source of 2 of
   the 99 `rake lint` offenses above.
 
+## New this round: `rake drive` is flaky, so "drive_ok=true" from one run is not evidence
+
+The task handing off this round's audit asserted a runtime gate of
+"drive_ok=true, 123 checks passed, 0 failed, covering 12 components."
+Neither number matches what `rake drive` actually produces on this tree:
+counting the `N of N checks passed` line printed by each of the 5
+`test/drive_*.rb` files gives 34 + 41 + 25 + 23 + 5 = **128** checks (not
+123), across 5 drive files, not 12 "components" (the previous round's
+report already reconciled a similarly-off "9 components" claim the same
+way — see "Rules followed" below). Taken alone this is a minor number
+mismatch upstream of this audit and not charged against the port.
+
+The finding that *is* charged against the port: `rake drive` was run 4
+times this round, back to back, on an unchanged tree (`git diff` against
+the prior report's commit touches only `AGENTS.md`):
+
+| Run | Result |
+|---|---|
+| 1 (no `xvfb-run`, misconfigured) | `Gtk::InitError` — not a port defect, an invocation mistake, excluded from the tally |
+| 2 (`xvfb-run`) | **FAILED** — `test/drive_compression.rb`: 31 of 34 checks passed; `shape.webp: not running` and `shape.webp: reported an outcome` both failed (the row was still mid-compression when checked), `controls re-enabled` failed too (same root cause: the filechooser button stays disabled while a row is still running). Rake aborted on this failure, so `drive_dialogs.rb`, `drive_i18n.rb`, `drive_modes.rb` and `drive_window.rb` never ran this attempt — a failed `drive_compression.rb` run silently withholds 94 other checks from ever executing, not just from passing. |
+| 3 (`xvfb-run`) | 34/34, 41/41, 25/25, 23/23, 5/5 — all 128 checks passed, `DRIVE OK` x5 |
+| 4 (`xvfb-run`) | 34/34, 41/41, 25/25, 23/23, 5/5 — all 128 checks passed, `DRIVE OK` x5 |
+
+Root cause, read at `test/drive_compression.rb:31-45`: the script waits a
+*fixed* interval (`d.step('wait for the compressors') { nil }` /
+`d.step('still waiting') { nil }`, two steps at the driver's 700ms
+interval = ~1.4s) and then asserts every row finished, rather than polling
+until `row.item.running == false` for all rows. WebP compression (shelling
+out to `cwebp`) is the slowest of the four formats in the fixture set, so
+whenever the subprocess runs slower than the fixed wait — one run in this
+sample, roughly matching a 1-in-4 rate on this machine — the row is still
+`running` when checked and three checks fail together (the two
+`shape.webp` checks plus `controls re-enabled`, which gates on the same
+"any row still running" state). This is a test-harness timing bug, not a
+missing or wrong port behavior: the actual compression completes correctly
+every time (confirmed by the later steps in the same run, which re-check
+file output after an explicit additional wait and always pass). It is
+reported here because a flaky gate is not a passing gate — a 123/0 or
+128/0 headline from a single run cannot be trusted as the port's
+steady-state result, and `accountability-ensurance.md` treats re-asserting
+that headline without re-running it as a false-green risk in its own
+right.
+
 ## Rules followed
 
 - Upstream's absence of tests is stated outright, not left as an implied
@@ -235,3 +278,11 @@ drive task.
 - The "9 components" figure in this round's gate is reconciled against the
   port's own logical units rather than repeated verbatim; the previous
   round's differing "7" is named but not silently carried forward.
+- This round's "123 checks / 12 components" gate claim is checked against
+  a freshly counted, freshly run total (128, 5 files) rather than repeated;
+  the discrepancy is named rather than smoothed over.
+- `rake drive` was run 4 times, not once, specifically because a
+  single-run "it passed" is not evidence for a UI driver that shells out
+  to real image-compression subprocesses on a fixed timer. The failure
+  this surfaced is reported with its reproduction rate and root cause, not
+  dismissed as a one-off.

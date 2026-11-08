@@ -15,6 +15,14 @@ current `origin/main` @ `1536d90` and stand without modification. The
 findings, not widget-identification findings, so they do not change
 anything below.
 
+Re-audit note (next round): still true — `git diff` from this file's
+introducing commit through current `HEAD` touches only `AGENTS.md`
+(confirmed again this round). This round's own new finding (`rake drive`
+is flaky — see `.reports/test-parity.md` and
+`.reports/accountability-ensurance.md`) is a test-harness timing defect
+in `test/drive_compression.rb`'s wait logic, not a widget-identification
+finding, so it does not change any row below either.
+
 Scan produced with the symbol table built from this machine's GTK4/Adwaita
 GIR (`gir-symbols.sh`, 1205 symbols) and `component-scan.sh` run on an
 `origin/main` worktree and on the `ruby` tree. Raw TSVs are reproducible with:
