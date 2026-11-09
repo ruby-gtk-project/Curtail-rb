@@ -53,22 +53,13 @@ Gem::Specification.new do |spec|
   end
   enumerate_package_glob = lambda do |glob|
     Dir.glob(glob, File::FNM_DOTMATCH).filter_map do |path|
-      unless File.file?(path) && ![".", ".."].include?(File.basename(path))
-        next
-      end
+      next unless File.file?(path) && ![".", ".."].include?(File.basename(path))
 
       relative_package_path.call(path)
     end
   end
   enumerate_package_files = lambda do |root|
-    enumerate_package_glob.call(
-      File.join(
-        gemspec_root,
-        root,
-        "**",
-        "*",
-      ),
-    )
+    enumerate_package_glob.call(File.join(gemspec_root, root, "**", "*"))
   end
   package_metadata_files = %w[
     CHANGELOG.md

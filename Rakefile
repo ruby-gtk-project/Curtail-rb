@@ -62,6 +62,10 @@ end
 
 # Define a base default task early so other files can enhance it.
 desc "Default tasks aggregator"
+task :default do
+  puts "Default task complete."
+end
+
 task default: [:test, :lint]
 
 # Without this, a generated docs/ directory makes Rake resolve the bare
